@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #007bff;
+  --secondary-color: white;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+}
+
+.Btn {
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+.capBtn, .camBtn {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+.capBtn:hover, .camBtn:hover {
+  background-color: #3a93f1;
+  box-shadow: 0 0 10px rgb(85, 140, 191);
+}
+
+.submitBtn {
+  background-color: var(--success-color);
+  color: var(--secondary-color);
+}
+.submitBtn:hover {
+  background-color: #42a75a;
+  box-shadow: 0 0 10px rgb(80, 176, 107);
+}
+
+.backBtn {
+  background-color: black;
+  color: var(--secondary-color)
+}
+.backBtn:hover {
+  background-color: rgb(36, 35, 35);
+  box-shadow: 0 0 10px rgb(55, 57, 57);
+}
+
+.reBtn {
+  background-color: var(--danger-color);
+  color: var(--secondary-color)
+}
+.reBtn:hover {
+  background-color: rgb(218, 90, 90);
+  box-shadow: 0 0 10px rgb(204, 117, 117);
+}
+
+
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(240, 240, 240);
+}
+
