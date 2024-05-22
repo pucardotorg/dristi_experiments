@@ -1,0 +1,154 @@
+{
+	"info": {
+		"_postman_id": "d7bab91d-88e3-47e8-b004-8f2ad977bd36",
+		"name": "Icops Integration R&D",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18701670"
+	},
+	"item": [
+		{
+			"name": "ICops - Court to Police",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"RequestInfo\": {\n        \"apiId\": \"asset-services\",\n        \"ver\": null,\n        \"ts\": null,\n        \"action\": null,\n        \"did\": null,\n        \"key\": null,\n        \"msgId\": \"search with from and to values\",\n        \"authToken\": \"apiId\",\n        \"userInfo\": {\n            \"uuid\": \"as\",\n            \"roles\": [\n                {\n                    \"code\": \"CITIZEN\",\n                    \"tenantId\": \"pg\"\n                }\n            ],\n            \"type\": \"CITIZEN\"\n        }\n    },\n    \"ProcessRequest\": {\n        \"cnrNo\": \"KLTR130008382018\",\n        \"processCino\": \"KLTR130008382018\",\n        \"sparty_data\": {\n            \"spartyAge\": \"17\",\n            \"spartyName\": \"Sample Name\"\n        },\n        \"processCaseno\": \"CC/1234/2023\",\n        \"processUniqueId\": \"PKLER550001232023_1_1\",\n        \"processRespondentAge\": \"17\",\n        \"processDocType\": \"Summons\",\n        \"processInvAgency\": \" Police \",\n        \"processRespondentRelation\": \"Father\",\n        \"processRespondentGender\": \"Male\",\n        \"courtBenchCd\": \"1\",\n        \"processJudge\": \"Santhosh K Venu\",\n        \"caseListedDate\": \"04/01/2024\",\n        \"courtBenchName\": \"Principal Sub Judge\",\n        \"processFirYear\": \"2023\",\n        \"orderSignedDate\": \"29/04/2024\",\n        \"processFirSrlno\": \"1268\",\n        \"processCourtCode\": \"KLTR13\",\n        \"processCourtName\": \"Sub Court, Irinjalakuda\",\n        \"processFirPScode\": \"15290042\",\n        \"processIssueDate\": \"04/01/2024\",\n        \"processPartyType\": \"PW\",\n        \"processDocSubType\": \"Summons to witness [Sec. 61 and 244]\",\n        \"processDocTypeCode\": \"2\",\n        \"processPartyNumber\": \"10\",\n        \"processReceiverType\": \"Witness\",\n        \"processReceiverWard\": \"\",\n        \"processReceiverState\": \"KERALA\",\n        \"processDocSubTypeCode\": \"2000020\",\n        \"processReceiverTaluka\": \"Mukundapuram\",\n        \"processRespondantName\": \"\",\n        \"processRespondantSrno\": \"\",\n        \"processRespondantType\": \"Witness\",\n        \"processRespondentName\": \"Sujith Kumar R\",\n        \"processNextHearingDate\": \"30/05/2024\",\n        \"processReceiverAddress\": \"Sub Inspector of police, Pudukkad Police Station\",\n        \"processReceiverPincode\": \"680010\",\n        \"processReceiverVillage\": \"KOLAZHY\",\n        \"processReceiverDistrict\": \"THRISSUR\",\n        \"processPoliceStationCode\": \"15290042\",\n        \"processPoliceStationName\": \"PUDUKKADU\",\n        \"processRespondentAliasName\": \"Suji\",\n        \"processRespondentRelativeName\": \"Raja\",\n        \"processDoc\": \"VGhpcyBpcyBhIHNhbXBsZSBiYXNlNjQgc3RyaW5nLg==\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{egov-icops}}/icops-integration/v1/_sendRequest",
+					"host": [
+						"{{egov-icops}}"
+					],
+					"path": [
+						"icops-integration",
+						"v1",
+						"_sendRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Icops Police to Court Auth",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "service_name",
+							"value": "serviceName",
+							"type": "text"
+						},
+						{
+							"key": "service_ky",
+							"value": "serviceKey",
+							"type": "text"
+						},
+						{
+							"key": "auth_type",
+							"value": "get_AuthToken",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{egov-icops}}/egov-kerala-icops/icops-integration/getAuthToken",
+					"host": [
+						"{{egov-icops}}"
+					],
+					"path": [
+						"egov-kerala-icops",
+						"icops-integration",
+						"getAuthToken"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Icops Police to Court Report",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzZXJ2aWNlTmFtZSIsImlhdCI6MTcxNjI5MDE4NywiZXhwIjoxODI0MjkwMTg3fQ._WSKfXRlexbZM4WGDEEea0pxfCrfyvCNTyo28ZhHvqwOaBfBVPF8bUnxcFOzmPO16Dxej_wOappSBWpGGPak3A",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"processUniqueId\": \"PKLER550001232023_1_1\",\n    \"processCourtCode\": \"KLTR01\",\n    \"processActionDate\": \"10/10/2022\", // Date on which execution is done (Both Served/Not Served)\n    \"ProcessActionStatusCd\": \"1\", // Executed\n    \"processActionStatus\": \"Served\", // Served/Not Served/ Not Arrested/ Returned etc\n    \"processActionSubStatusCd\": \"6\", // Head Of Department\n    \"processActionSubStatus\": \"Head Of Department\",\n    \"processFailureReason\": \"Address Not Available\", //Reason for Failure to execute the process, if status is Not Served/Not Arrested/ Retruned etc.\n    \"processMethodOfExecution\": \"By Hand\", // Execution Method, By Hand/By Email/By Message/By Post/ To Relative etc.\n    \"processExecutedTo\": \"Relative Name\", // If executed through a relative then Relative Name,\n    \"processExecutedToRelation\": \"Spouse\", // Relation of Executed to person.\n    \"processExecutionPlace\": \"Kumaramangalam\", // Pen Number of Executing Officer,\n    \"processActionRemarks\": \"Summons served to relative staying in same house\", // Action remarks by officer if any\n    \"processExecutingOfficerName\": \"Sudhash Kumar\", // Name of Executing Officer,\n    \"processExecutingOfficerRank\": \"Civil Police Officer\", // Rank of Executing Officer,\n    \"processExecutingOfficeCode\": \"15286029\", // Office Code of Executing Officer,\n    \"processExecutingOffice\": \"KUNNATHUNADU \", // Office of Executing Officer,\n    \"processSubmittingOfficerName\": \"Sreeju\", // Name of Report Submitting Officer,\n    \"processSubmittingOfficerRank\": \"Inspector\", // Rank of Report Submitting Officer,\n    \"processSubmittingOfficeCode\": \"15286029\", // Office Code of Report Submitting Officer,\n    \"processSubmittingOffice\": \"KUNNATHUNADU \", // Office of Report Submitting Officer,\n    \"processReportSubmittingDateTime\": \"2023-10-30 17: 04: 04\",\n    \"processReport\": \"VGhpcyBpcyBhIHNhbXBsZSBiYXNlNjQgc3RyaW5nLg==\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{egov-icops}}/icops-integration/getProcessReport",
+					"host": [
+						"{{egov-icops}}"
+					],
+					"path": [
+						"icops-integration",
+						"getProcessReport"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "egov-icops",
+			"value": "http://localhost:8070/egov-kerala-icops",
+			"type": "string"
+		}
+	]
+}
