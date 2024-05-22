@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "d7bab91d-88e3-47e8-b004-8f2ad977bd36",
+		"_postman_id": "e0b1a4c1-c55f-4613-8a87-81caea1c8a91",
 		"name": "Icops Integration R&D",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "18701670"
+		"_exporter_id": "14047350"
 	},
 	"item": [
 		{
@@ -21,13 +21,14 @@
 					}
 				},
 				"url": {
-					"raw": "{{egov-icops}}/icops-integration/v1/_sendRequest",
+					"raw": "{{egov-icops}}/v1/integrations/iCops/_sendRequest",
 					"host": [
 						"{{egov-icops}}"
 					],
 					"path": [
-						"icops-integration",
 						"v1",
+						"integrations",
+						"iCops",
 						"_sendRequest"
 					]
 				}
@@ -42,7 +43,6 @@
 					{
 						"key": "Content-Type",
 						"value": "application/json",
-						"type": "text",
 						"disabled": true
 					}
 				],
@@ -67,14 +67,15 @@
 					]
 				},
 				"url": {
-					"raw": "{{egov-icops}}/egov-kerala-icops/icops-integration/getAuthToken",
+					"raw": "{{egov-icops}}/v1/integrations/iCops/_getAuthToken",
 					"host": [
 						"{{egov-icops}}"
 					],
 					"path": [
-						"egov-kerala-icops",
-						"icops-integration",
-						"getAuthToken"
+						"v1",
+						"integrations",
+						"iCops",
+						"_getAuthToken"
 					]
 				}
 			},
@@ -90,13 +91,11 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzZXJ2aWNlTmFtZSIsImlhdCI6MTcxNjI5MDE4NywiZXhwIjoxODI0MjkwMTg3fQ._WSKfXRlexbZM4WGDEEea0pxfCrfyvCNTyo28ZhHvqwOaBfBVPF8bUnxcFOzmPO16Dxej_wOappSBWpGGPak3A",
-						"type": "text"
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzZXJ2aWNlTmFtZSIsImlhdCI6MTcxNjI5MDE4NywiZXhwIjoxODI0MjkwMTg3fQ._WSKfXRlexbZM4WGDEEea0pxfCrfyvCNTyo28ZhHvqwOaBfBVPF8bUnxcFOzmPO16Dxej_wOappSBWpGGPak3A"
 					},
 					{
 						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
+						"value": "application/json"
 					}
 				],
 				"body": {
@@ -109,13 +108,15 @@
 					}
 				},
 				"url": {
-					"raw": "{{egov-icops}}/icops-integration/getProcessReport",
+					"raw": "{{egov-icops}}/v1/integrations/iCops/_getProcessReport",
 					"host": [
 						"{{egov-icops}}"
 					],
 					"path": [
-						"icops-integration",
-						"getProcessReport"
+						"v1",
+						"integrations",
+						"iCops",
+						"_getProcessReport"
 					]
 				}
 			},
