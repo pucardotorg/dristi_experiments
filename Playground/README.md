@@ -1,5 +1,7 @@
 This repository contains the web application for Dristi Experiments Playground. 
 
+Please refer to the wireframes in ```/wireframes``` folder
+
 ## Getting Started
 
 First, run the development server:
