@@ -5,7 +5,7 @@ A function to broadcast messages.
 '''
 
 from src.buffering_strategy.buffering_strategy_factory import BufferingStrategyFactory
-
+import json
 
 class Room:
     """
@@ -65,11 +65,11 @@ class Room:
         return f"{self.room_id}_{self.file_counter}.wav"
 
     def process_audio(self, websocket, vad_pipeline, asr_pipeline):
-        self.buffering_strategy.process_audio(websocket, vad_pipeline, asr_pipeline)
+        self.buffering_strategy.process_audio(websocket, vad_pipeline, asr_pipeline, self.connected_clients, self.room_id)
 
     async def broadcast_to_room(self, message):
         for client_id, client in self.connected_clients.items():
-            await client.websocket.send(json.dumps({'type': 'transcription', 'data': message}))
+            await client.websocket.send(json.dumps(message))
 
     def join_room(self, client):
         self.connected_clients[client.client_id] = client
@@ -77,5 +77,10 @@ class Room:
 
     def leave_room(self, client_id):
         if client_id in self.connected_clients:
-            del self.connected_clients[client.client_id]
+            del self.connected_clients[client_id]
             print(f"Client {client.client_id} left room {self.room_id}")
+
+    async def inform_client(self, client_id, message):
+        if client_id in self.connected_clients:
+            client = self.connected_clients[client_id]
+            await client.websocket.send(json.dumps(message))

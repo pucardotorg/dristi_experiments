@@ -12,11 +12,15 @@
     <title>Audio Stream to WebSocket Server</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background: #f4f4f4;
             text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: auto;
         }
         h1 {
             color: #333;
@@ -70,7 +74,7 @@
         }
         /* ... existing styles ... */
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .form-container {
@@ -102,16 +106,24 @@
             opacity: 0.9;
         }
 
+        #login-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vh;
+            height: 100vh;
+        }
+
     </style>
-    <script src='utils.js'></script>
 </head>
 <body>
     <div id="recording-panel">
         <h1>Transcription POC</h1>
+        <h3>Room Id - <span id="meet-id"></span></h3>
         <div class="controls">
             <div class="control-group">
                 <label class="label" for="websocketAddress">WebSocket Address:</label>
-                <input type="text" id="websocketAddress" value="ws://localhost:8765">
+                <input type="text" id="websocketAddress" value="ws://localhost:8767">
             </div>
             <div class="control-group">
                 <label class="label" for="bufferingStrategySelect" onchange="toggleBufferingStrategyPanel()">Buffering Strategy:</label>
@@ -160,14 +172,13 @@
 
     <div id="login-panel">
         <div class="form-container">
+            <h3>Pucar Login</h3>
             <input type="text" id="room-id" placeholder="Room Id">
-            <button id="join-room">Join Room</button>
-            <button id="create-room">Create Room</button>
+            <button id="join-room" onclick="joinRoom()">Join Room</button>
+            <button id="create-room" onclick="createRoom()">Create Room</button>
         </div>
     </div>
 
-    <!-- Add a login form(Name, Email, Account Type). Once logged in then show this screen. -->
+    <script src='utils.js'></script>
 </body>
 </html>
-<!-- python3 -m src.main --vad-args '{"auth_token": "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"}' -->
- <!-- export PYANNOTE_AUTH_TOKEN=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 -->

@@ -2,8 +2,9 @@ import os
 import asyncio
 import json
 import time
-
+from src.transcription_utils import append_transcription
 from .buffering_strategy_interface import BufferingStrategyInterface
+
 
 class SilenceAtEndOfChunk(BufferingStrategyInterface):
     """
@@ -41,10 +42,10 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
         self.error_if_not_realtime = os.environ.get('ERROR_IF_NOT_REALTIME')
         if not self.error_if_not_realtime:
             self.error_if_not_realtime = kwargs.get('error_if_not_realtime', False)
-        
+
         self.processing_flag = False
 
-    def process_audio(self, websocket, vad_pipeline, asr_pipeline):
+    def process_audio(self, websocket, vad_pipeline, asr_pipeline, connected_clients, room_id):
         """
         Process audio chunks by checking their length and scheduling asynchronous processing.
 
@@ -59,15 +60,17 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
         chunk_length_in_bytes = self.chunk_length_seconds * self.client.sampling_rate * self.client.samples_width
         if len(self.client.buffer) > chunk_length_in_bytes:
             if self.processing_flag:
-                exit("Error in realtime processing: tried processing a new chunk while the previous one was still being processed")
+                exit(
+                    "Error in realtime processing: tried processing a new chunk while the previous one was still being processed")
 
             self.client.scratch_buffer += self.client.buffer
             self.client.buffer.clear()
             self.processing_flag = True
             # Schedule the processing in a separate task
-            asyncio.create_task(self.process_audio_async(websocket, vad_pipeline, asr_pipeline))
-    
-    async def process_audio_async(self, websocket, vad_pipeline, asr_pipeline):
+            asyncio.create_task(
+                self.process_audio_async(websocket, vad_pipeline, asr_pipeline, connected_clients, room_id))
+
+    async def process_audio_async(self, websocket, vad_pipeline, asr_pipeline, connected_clients, room_id):
         """
         Asynchronously process audio for activity detection and transcription.
 
@@ -78,7 +81,7 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
             websocket (Websocket): The WebSocket connection for sending transcriptions.
             vad_pipeline: The voice activity detection pipeline.
             asr_pipeline: The automatic speech recognition pipeline.
-        """   
+        """
         start = time.time()
         vad_results = await vad_pipeline.detect_activity(self.client)
 
@@ -88,15 +91,21 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
             self.processing_flag = False
             return
 
-        last_segment_should_end_before = ((len(self.client.scratch_buffer) / (self.client.sampling_rate * self.client.samples_width)) - self.chunk_offset_seconds)
+        last_segment_should_end_before = ((len(self.client.scratch_buffer) / (
+                    self.client.sampling_rate * self.client.samples_width)) - self.chunk_offset_seconds)
         if vad_results[-1]['end'] < last_segment_should_end_before:
             transcription = await asr_pipeline.transcribe(self.client)
             if transcription['text'] != '':
                 end = time.time()
                 transcription['processing_time'] = end - start
-                json_transcription = json.dumps(transcription) 
-                await websocket.send(json_transcription)
+                json_transcription = json.dumps(transcription)
+                append_transcription(room_id, transcription['text'])
+                for client_id, client in connected_clients.items():
+                    await client.websocket.send(json_transcription)
+                self.client.scratch_buffer.clear()
+                self.client.increment_file_counter()
+                # await websocket.send(json_transcription)
             self.client.scratch_buffer.clear()
             self.client.increment_file_counter()
-        
         self.processing_flag = False
+        return ''
