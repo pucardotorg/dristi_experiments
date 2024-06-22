@@ -1,7 +1,10 @@
+from string import ascii_uppercase
+
 import websockets
 import uuid
 import json
 import ssl
+import random
 
 from src.audio_utils import save_audio_to_file
 from src.client import Client
@@ -32,24 +35,71 @@ class Server:
         self.samples_width = samples_width
         self.certfile = certfile
         self.keyfile = keyfile
-        self.connected_clients = {}
+        self.rooms = {}  # Dictionary to manage rooms
 
-    async def handle_audio(self, client, websocket):
+    async def handle_audio(self, websocket):
         while True:
             message = await websocket.recv()
+            config = json.loads(message)
+            room = self.rooms[config.get('room_id')]
+            room_id = config.get('room_id')
 
-            if isinstance(message, bytes):
-                client.append_audio_data(message)
-            elif isinstance(message, str):
-                config = json.loads(message)
-                if config.get('type') == 'config':
-                    client.update_config(config['data'])
+            if room is not None:
+                if config.get('type') == 'audio':
+                    room.append_audio_data(config.get('data'))
+                elif config.get('type') == 'config':
+                    room.update_config(config['data'])
                     continue
+                elif config.get('type') == 'join_room':
+                    room_id = config['room_id']
+                    client_id = self.join_room(room_id)
+                    await websocket.send(json.dumps({'type': 'joined_room', 'room_id': room_id, 'client_id': client_id}))
+                    continue
+                elif config.get('type') == 'leave_room':
+                    room_id = config['room_id']
+                    client_id = config['client_id']
+                    room.leave_room(client_id)
+                    await websocket.send(json.dumps({'type': 'left_room', 'room_id': room_id}))
+                    continue
+                else:
+                    print(f"Unexpected message type from {room.room_id}")
+            elif config.get('type') == 'create_room':
+                room_id = self.generate_unique_code(6)
+                client_id = self.join_room(room_id)
+                await websocket.send(json.dumps({'type': 'joined_room', 'room_id': room_id, 'client_id': client_id}))
+                continue
             else:
-                print(f"Unexpected message type from {client.client_id}")
+                print(f"Invalid room {room_id}")
 
             # this is synchronous, any async operation is in BufferingStrategy
-            client.process_audio(websocket, self.vad_pipeline, self.asr_pipeline)
+            room.process_audio(websocket, self.vad_pipeline, self.asr_pipeline)
+
+    def generate_unique_code(self, length):
+        while True:
+            code = ""
+            for _ in range(length):
+                code += random.choice(ascii_uppercase)
+
+            if code not in self.rooms:
+                break
+
+        return code
+
+    def get_client_room(self, client_id):
+        for room_id, room_clients in self.rooms.items():
+            if client_id in room_clients:
+                return room_id
+        return None
+
+
+    def join_room(self, room_id):
+        if room_id not in self.rooms:
+            room = Room(room_id, self.sampling_rate, self.samples_width)
+            self.rooms[room_id] = room
+        client_id = str(uuid.uuid4())
+        client = Client(client_id, self.sampling_rate, self.samples_width)
+        room.join_room(client)
+        return client_id
 
     def get_current_client_id(self):
         # Return the current client_id being handled
@@ -58,17 +108,15 @@ class Server:
         return None
     
     async def handle_websocket(self, websocket, path):
-        client_id = str(uuid.uuid4())
-        client = Client(client_id, self.sampling_rate, self.samples_width)
-        self.connected_clients[client_id] = client
-        await websocket.send(json.dumps({'type': 'client_id', 'client_id': client_id}))
-        print(f"client {client_id} connected")
+        # client_id = str(uuid.uuid4())
+        # client = Client(client_id, self.sampling_rate, self.samples_width)
+        # self.connected_clients[client_id] = client
+        # await websocket.send(json.dumps({'type': 'client_id', 'client_id': client_id}))
+        # print(f"client {client_id} connected")
         try:
-            await self.handle_audio(client, websocket)
+            await self.handle_audio(websocket)
         except websockets.ConnectionClosed as e:
-            print(f"Connection with {client_id} closed: {e}")
-        finally:
-            del self.connected_clients[client_id]
+            print(f"Connection closed: {e}")
 
     def start(self):
         if self.certfile:

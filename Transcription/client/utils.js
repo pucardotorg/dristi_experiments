@@ -9,7 +9,8 @@ let websocket;
 let context;
 let processor;
 let globalStream;
-let clientId; // Variable to store the client ID
+let clientId = null; // Variable to store the client ID
+let roomId = null;
 let start_time = [0, 0, 0];
 let end_time = [0, 0, 0];
 const websocket_uri = 'ws://localhost:8765';
@@ -17,6 +18,17 @@ const bufferSize = 4096;
 let isRecording = false;
 let send_original = "";
 let currentPosition = 0;
+const recording-panel = document.getElementById('recording-panel');
+const login-panel = document.getElementById('login-panel');
+
+if(roomId == null && clientId == null) {
+    recording-panel.classList.add('hidden');
+    login-panel.classList.remove('hidden');
+} else {
+    login-panel.classList.add('hidden');
+    recording-panel.classList.remove('hidden');
+}
+
 function initWebSocket() {
     const websocketAddress = document.getElementById('websocketAddress').value;
     chunk_length_seconds = document.getElementById('chunk_length_seconds').value;
@@ -56,10 +68,12 @@ function initWebSocket() {
     websocket.onmessage = event => {
         const data = JSON.parse(event.data);
 
-        if (data.type === 'client_id') {
+        if (data.type === 'joined_room') {
             // Handle the client ID
             clientId = data.client_id;
+            roomId = data.room_id;
             console.log('Received client ID:', clientId);
+            console.log('Received room ID:', roomId);
         } else {
             // Handle other types of messages (e.g., transcription data)
             updateTranscription(data);
@@ -127,6 +141,7 @@ function save_text() {
             original: send_original,
             edited: edited_text,
             client_id: clientId,
+            room_id: roomId,
             start_time: start_time,
             end_time: end_time
         })
@@ -300,7 +315,18 @@ function processAudio(e, source) {
     const audioData = convertFloat32ToInt16(downsampledBuffer);
 
     if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(audioData);
+        const message = {
+            type: 'audio',
+            data: audioData,
+            room_id: roomId,
+            client_id: clientId,
+            roomInfo: {
+                // Add any additional information here
+                timestamp: Date.now(),
+            }
+        };
+        websocket.send(JSON.stringify(message));
+//        websocket.send(audioData);
     }
 
 }
@@ -325,5 +351,28 @@ function toggleBufferingStrategyPanel() {
     } else {
         var panel = document.getElementById('silence_at_end_of_chunk_options_panel');
         panel.classList.add('hidden');
+    }
+}
+
+function createRoom() {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        const message = {
+            type: 'join_room',
+            room_id: roomId,
+        };
+        websocket.send(JSON.stringify(message));
+//        websocket.send(audioData);
+    }
+}
+
+function joinRoom() {
+    const room_id = document.getElementById('room-id').value;
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        const message = {
+            type: 'join_room',
+            room_id: room_id,
+        };
+        websocket.send(JSON.stringify(message));
+//        websocket.send(audioData);
     }
 }
