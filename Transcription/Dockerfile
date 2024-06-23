@@ -19,9 +19,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
                    python${PYTHON_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PyTorch and torchvision with CUDA support
-RUN pip3 install torch==2.0.0+cu118 torchvision==0.15.0+cu118 torchaudio==2.0.0+cu118 -f https://download.pytorch.org/whl/cu118/torch_stable.html
-
 # Copy the requirements.txt file
 COPY requirements.txt requirements.txt
 
@@ -31,18 +28,14 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy the rest of your application's code
 COPY . .
 
-# Copy the startup script
-COPY start.sh start.sh
-
-# Make the startup script executable
-RUN chmod +x start.sh
-
-# Make ports 8765 and 5000 available to the world outside this container
+# Make port 8765 available to the world outside this container
 EXPOSE 8765
-EXPOSE 5000
 
 # Define environment variable
 ENV NAME VoiceStreamAI
 
-# Set the entrypoint to the startup script
-ENTRYPOINT ["./start.sh"]
+# Set the entrypoint to your application
+ENTRYPOINT ["python3", "-m", "src.main"]
+
+# Provide a default command (can be overridden at runtime)
+CMD ["--host", "0.0.0.0", "--port", "8765"]

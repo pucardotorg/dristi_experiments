@@ -118,8 +118,10 @@ class FasterWhisperASR(ASRInterface):
         file_path = await save_audio_to_file(client.scratch_buffer, client.get_file_name())
 
         language = None if client.config['language'] is None else language_codes.get(client.config['language'].lower())
-        segments, info = self.asr_pipeline.transcribe(file_path, word_timestamps=True, language=language)
-        
+        # segments, info = self.asr_pipeline.transcribe(file_path, word_timestamps=True, language=language)
+        segments, info = self.asr_pipeline.transcribe(file_path, word_timestamps=True, language=language,
+                                                      task="translate", beam_size=1)
+
         segments = list(segments)  # The transcription will actually run here.
         identifier = file_path.split('/')[1].split('_')[0]
         dest_folder_path = f"audio_uploads/{identifier}"
@@ -131,13 +133,14 @@ class FasterWhisperASR(ASRInterface):
         flattened_words = [word for segment in segments for word in segment.words]
         # print(f"Transcription: {flattened_words}")
         to_return = {
-        "language": info.language,
-        "language_probability": info.language_probability,
-        "text": ' '.join([s.text.strip() for s in segments]),
-        "words":
-            [
-                {"word": w.word, "start": w.start, "end": w.end, "probability":w.probability} for w in flattened_words
-            ]
+            "language": info.language,
+            "language_probability": info.language_probability,
+            "text": ' '.join([s.text.strip() for s in segments]),
+            "words":
+                [
+                    {"word": w.word, "start": w.start, "end": w.end, "probability": w.probability} for w in
+                    flattened_words
+                ]
         }
         return to_return
 

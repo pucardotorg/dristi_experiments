@@ -12,7 +12,7 @@ from src.room import Room
 import base64
 import numpy as np
 from src.database import Database
-from src.transcription_utils import read_transcription, append_transcription
+from src.transcription_utils import read_transcription, append_transcription, update_transcription_file, merge
 
 
 class Server:
@@ -67,24 +67,31 @@ class Server:
                 elif config.get('type') == 'join_room':
                     room_id = config['room_id']
                     client_id, room = self.join_room(room_id, websocket)
+                    room_info = self.db.fetch_room_info(room_id)
                     await room.inform_client(client_id,
-                                             {'type': 'joined_room', 'room_id': room_id, 'client_id': client_id})
+                                             {'type': 'joined_room', 'room_id': room_id, 'client_id': client_id,
+                                              'transcript_url': room_info['transcript_url'],
+                                              'audio_url': room_info['transcript_url']})
                     await room.inform_client(client_id, {'type': 'transcription', 'text': read_transcription(room_id)})
-                    # await websocket.send(json.dumps({'type': 'joined_room', 'room_id': room_id, 'client_id': client_id}))
                 elif config.get('type') == 'leave_room':
                     room_id = config['room_id']
                     client_id = config['client_id']
                     room.leave_room(client_id)
                     await room.inform_client(client_id, {'type': 'left_room', 'room_id': room_id})
-                    # await websocket.send(json.dumps({'type': 'left_room', 'room_id': room_id}))
+                elif config.get('type') == 'update_transcription':
+                    message = self.update_transcription(config)
+                    message['type'] = 'refresh_transcription'
+                    await room.broadcast_to_room(message)
                 else:
                     print(f"Unexpected message type from {room.room_id}")
 
             elif config.get('type') == 'create_room':
                 room_id = self.generate_unique_code(6)
                 client_id, room = self.join_room(room_id, websocket)
-                await room.inform_client(client_id, {'type': 'joined_room', 'room_id': room_id, 'client_id': client_id})
-                # await websocket.send(json.dumps({'type': 'joined_room', 'room_id': room_id, 'client_id': client_id}))
+                room_info = self.db.fetch_room_info(room_id)
+                await room.inform_client(client_id, {'type': 'joined_room', 'room_id': room_id, 'client_id': client_id,
+                                                     'transcript_url': room_info['transcript_url'],
+                                                     'audio_url': room_info['transcript_url']})
             else:
                 print(f"Invalid room {room_id}")
 
@@ -127,18 +134,26 @@ class Server:
         room.join_room(client)
         return client_id, room
 
+    def update_transcription(self, config):
+        original_text = config['original']
+        edited_text = config['edited']
+        client_id = config['client_id']
+        room_id = config['room_id']
+
+        update_transcription_file(room_id, "modified", edited_text)
+        update_transcription_file(room_id, "original", original_text)
+
+        merge(room_id)
+
+        self.db.update_session(room_id)
+        return self.db.fetch_room_info(room_id)
+
     def get_current_client_id(self):
-        # Return the current client_id being handled
         if self.connected_clients:
             return next(iter(self.connected_clients))
         return None
 
     async def handle_websocket(self, websocket, path):
-        # client_id = str(uuid.uuid4())
-        # client = Client(client_id, self.sampling_rate, self.samples_width)
-        # self.connected_clients[client_id] = client
-        # await websocket.send(json.dumps({'type': 'client_id', 'client_id': client_id}))
-        # print(f"client {client_id} connected")
         try:
             await self.handle_audio(websocket)
         except websockets.ConnectionClosed as e:

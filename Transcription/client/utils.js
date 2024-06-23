@@ -13,7 +13,7 @@ let clientId = null; // Variable to store the client ID
 let roomId = null;
 let start_time = [0, 0, 0];
 let end_time = [0, 0, 0];
-const websocket_uri = 'ws://localhost:8767';
+const websocket_uri = 'ws://localhost:8765';
 const bufferSize = 4096;
 let isRecording = false;
 let send_original = "";
@@ -33,10 +33,17 @@ function renderPortal() {
     }
 }
 
-function initWebSocket() {
-    const websocketAddress = document.getElementById('websocketAddress').value;
-    chunk_length_seconds = document.getElementById('chunk_length_seconds').value;
-    chunk_offset_seconds = document.getElementById('chunk_offset_seconds').value;
+function initWebSocket(offset="config") {
+    let websocketAddress;
+    if(offset === "config") {
+        websocketAddress = document.getElementById('websocketAddress').value;
+    } else {
+       websocketAddress = document.getElementById('websocketAddress-login').value;
+    }
+//    chunk_length_seconds = document.getElementById('chunk_length_seconds').value;
+//    chunk_offset_seconds = document.getElementById('chunk_offset_seconds').value;
+    chunk_length_seconds = 1;
+    chunk_offset_seconds = 0.1;
     const selectedLanguage = document.getElementById('languageSelect').value;
     const selectedInputSource = document.querySelector('input[name="inputSource"]:checked').value;
     const fileInput = document.getElementById('audio_file');
@@ -72,14 +79,27 @@ function initWebSocket() {
     websocket.onmessage = event => {
         const data = JSON.parse(event.data);
         console.log(data);
-        if (data.type === 'joined_room') {
+        if (data.type === 'joined_room' || data.type === 'refresh_transcription') {
             // Handle the client ID
+            artifactDownloadPanel = document.getElementById("artifact-download-panel")
             clientId = data.client_id;
             roomId = data.room_id;
+            transcriptionUrl = data.transcript_url
+            audioUrl = data.audio_url
             document.getElementById("meet-id").textContent = roomId;
-            renderPortal();
+            console.log()
+            if(transcriptionUrl != "" && audioUrl != "") {
+                artifactDownloadPanel.classList.remove("hidden");
+                document.getElementById("trans-download-link").href = transcriptionUrl;
+                document.getElementById("audio-download-link").href = audioUrl;
+            } else {
+                artifactDownloadPanel.classList.add("hidden");
+            }
+            if(data.type === 'joined_room' ) {
+                renderPortal();
+            }
         } else {
-            // Handle other types of messages (e.g., transcription data)
+                // Handle other types of messages (e.g., transcription data)
             updateTranscription(data);
         }
     };
@@ -261,13 +281,16 @@ function stopRecording() {
 }
 
 function sendAudioConfig() {
-    let selectedStrategy = document.getElementById('bufferingStrategySelect').value;
+//    let selectedStrategy = document.getElementById('bufferingStrategySelect').value;
+    let selectedStrategy = 'silence_at_end_of_chunk';
     let processingArgs = {};
 
     if (selectedStrategy === 'silence_at_end_of_chunk') {
         processingArgs = {
-            chunk_length_seconds: parseFloat(document.getElementById('chunk_length_seconds').value),
-            chunk_offset_seconds: parseFloat(document.getElementById('chunk_offset_seconds').value)
+//            chunk_length_seconds: parseFloat(document.getElementById('chunk_length_seconds').value),
+//            chunk_offset_seconds: parseFloat(document.getElementById('chunk_offset_seconds').value)
+            chunk_length_seconds: 1,
+            chunk_offset_seconds: 0.1
         };
     }
 
@@ -342,7 +365,7 @@ function convertFloat32ToInt16(buffer) {
 }
 
 // Initialize WebSocket on page load
-window.onload = initWebSocket;
+window.onload = initWebSocket();
 renderPortal();
 
 function toggleBufferingStrategyPanel() {
@@ -364,7 +387,6 @@ function createRoom() {
             room_id: roomId,
         };
         websocket.send(JSON.stringify(message));
-//        websocket.send(audioData);
     }
 }
 
@@ -376,7 +398,24 @@ function joinRoom() {
             room_id: room_id,
         };
         websocket.send(JSON.stringify(message));
-//        websocket.send(audioData);
+    }
+}
+
+function updateOriginalTranscriptionServer() {
+    const edited_text = document.getElementById('editable-transcription').value;
+    const orginal_text = document.getElementById('transcription').textContent;
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        const message = {
+            type: 'update_transcription',
+            original: send_original,
+            edited: edited_text,
+            client_id: roomId,
+            room_id: roomId,
+            start_time: start_time,
+            end_time: end_time
+        };
+        websocket.send(JSON.stringify(message));
+        document.getElementById('save_the_transcription').disabled = true;
     }
 }
 

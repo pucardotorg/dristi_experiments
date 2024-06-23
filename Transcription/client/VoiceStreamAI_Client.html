@@ -113,8 +113,12 @@ font-family: Arial, sans-serif;
             width: 100vh;
             height: 100vh;
         }
-
+        #artifact-download-panel {
+            margin: 30px;
+        }
     </style>
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
     <div id="recording-panel">
@@ -123,24 +127,24 @@ font-family: Arial, sans-serif;
         <div class="controls">
             <div class="control-group">
                 <label class="label" for="websocketAddress">WebSocket Address:</label>
-                <input type="text" id="websocketAddress" value="ws://localhost:8767">
+                <input type="text" id="websocketAddress" value="ws://localhost:8765">
             </div>
-            <div class="control-group">
-                <label class="label" for="bufferingStrategySelect" onchange="toggleBufferingStrategyPanel()">Buffering Strategy:</label>
-                <select id="bufferingStrategySelect">
-                    <option value="silence_at_end_of_chunk" selected>Silence at End of Chunk</option>
-                </select>
-            </div>
-            <div class="silence_at_end_of_chunk_options_panel">
-                <div class="control-group">
-                    <label class="label" for="chunk_length_seconds">Chunk Length (s):</label>
-                    <input type="number" id="chunk_length_seconds" value="3" min="1">
-                </div>
-                <div class="control-group">
-                    <label class="label" for="chunk_offset_seconds">Silence at the End of Chunk (s):</label>
-                    <input type="number" id="chunk_offset_seconds" value="0.1" min="0">
-                </div>
-            </div>
+<!--            <div class="control-group">-->
+<!--                <label class="label" for="bufferingStrategySelect" onchange="toggleBufferingStrategyPanel()">Buffering Strategy:</label>-->
+<!--                <select id="bufferingStrategySelect">-->
+<!--                    <option value="silence_at_end_of_chunk" selected>Silence at End of Chunk</option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div class="silence_at_end_of_chunk_options_panel">-->
+<!--                <div class="control-group">-->
+<!--                    <label class="label" for="chunk_length_seconds">Chunk Length (s):</label>-->
+<!--                    <input type="number" id="chunk_length_seconds" value="3" min="1">-->
+<!--                </div>-->
+<!--                <div class="control-group">-->
+<!--                    <label class="label" for="chunk_offset_seconds">Silence at the End of Chunk (s):</label>-->
+<!--                    <input type="number" id="chunk_offset_seconds" value="0.1" min="0">-->
+<!--                </div>-->
+<!--            </div>-->
             <div class="control-group">
                 <label class="label" for="languageSelect">Language:</label>
                 <select id="languageSelect">
@@ -161,7 +165,25 @@ font-family: Arial, sans-serif;
         <input type="file" id="audio_file" accept="audio/*" >
         <button id="startButton" onclick='startRecording()' disabled>Start Streaming</button>
         <button id="stopButton" onclick='stopRecording()' disabled>Stop Streaming</button>
-        <button id="save_the_transcription" onclick='save_text()' disabled>Save Transcription</button>
+        <button id="save_the_transcription" onclick='updateOriginalTranscriptionServer()' disabled>Save Transcription</button>
+
+        <div id="artifact-download-panel">
+            <a href="" id="trans-download-link" target="_blank">
+                <button type="button" class="btn btn-light" id="trans-btn-download" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-download"></i>
+                    <span>Download Transcription</span>
+                </button>
+            </a>
+
+            <a href="" id="audio-download-link" target="_blank">
+                <button type="button" class="btn btn-light" id="audio-btn-download" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-download"></i>
+                    <span>Download Audio</span>
+                </button>
+            </a>
+        </div>
+
+
         <div id="transcription"></div>
         <textarea id="editable-transcription"></textarea>
         <br/>
@@ -173,6 +195,9 @@ font-family: Arial, sans-serif;
     <div id="login-panel">
         <div class="form-container">
             <h3>Pucar Login</h3>
+            <label class="label" for="websocketAddress-login">WebSocket Address:</label>
+            <input type="text" id="websocketAddress-login" value="ws://localhost:8765">
+            <button onclick="initWebSocket('login')">Connect</button>
             <input type="text" id="room-id" placeholder="Room Id">
             <button id="join-room" onclick="joinRoom()">Join Room</button>
             <button id="create-room" onclick="createRoom()">Create Room</button>
