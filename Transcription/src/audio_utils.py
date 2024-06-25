@@ -15,10 +15,14 @@ async def save_audio_to_file(audio_data, file_name, audio_dir="audio_files", aud
     
     file_path = os.path.join(audio_dir, file_name)
 
-    with wave.open(file_path, 'wb') as wav_file:
-        wav_file.setnchannels(1)  # Assuming mono audio
-        wav_file.setsampwidth(2)
-        wav_file.setframerate(16000)
-        wav_file.writeframes(audio_data)
-
+    try:
+        with wave.open(file_path, 'wb') as wav_file:
+            wav_file.setnchannels(1)  # Assuming mono audio
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(16000)
+            wav_file.writeframes(audio_data)
+    except Exception as e:
+         print(f"Failed to write audio data to file: {e}")
+         raise
+         
     return file_path

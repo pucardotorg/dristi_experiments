@@ -113,7 +113,7 @@ class FasterWhisperASR(ASRInterface):
         model_size = kwargs.get('model_size', "large-v3")
         # Run on GPU with FP16
         self.asr_pipeline = WhisperModel(model_size, device="cuda", compute_type="float16")
-        
+
     async def transcribe(self, client):
         try:
             file_path = await save_audio_to_file(client.scratch_buffer, client.get_file_name())
@@ -129,7 +129,7 @@ class FasterWhisperASR(ASRInterface):
             try:
                 os.makedirs(dest_folder_path, exist_ok=True)
                 shutil.copy2(file_path, dest_file_path)
-            except IOError as e:
+            except OSError as e:
                 print(f"File operation error: {e}")
                 raise
             finally:

@@ -40,7 +40,7 @@ class PyannoteVAD(VADInterface):
             vad_results = self.vad_pipeline(audio_file_path)
             
             vad_segments = []
-            if len(vad_results) > 0:
+            if len(vad_results):
                 vad_segments = [
                     {"start": segment.start, "end": segment.end, "confidence": 1.0}
                     for segment in vad_results.itersegments()

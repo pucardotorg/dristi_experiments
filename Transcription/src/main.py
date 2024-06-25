@@ -37,8 +37,10 @@ def main():
         server = Server(vad_pipeline, asr_pipeline, host=args.host, port=args.port, sampling_rate=args.sampling_rate)
         asyncio.get_event_loop().run_until_complete(server.start())
         asyncio.get_event_loop().run_forever()
+    except asyncio.CancelledError:
+        print("Server shutdown requested.")
+        raise
     except Exception as e:
-        print(f"Error starting or running server: {e}")
 
 if __name__ == "__main__":
     main()
