@@ -1,0 +1,11 @@
+# Base dockerfile for torch and transformers using dockerfiels
+FROM python:3.9-slim as torch 
+RUN pip3 install  --no-cache-dir --prefer-binary torch 
+
+FROM python:3.9-slim as transformer
+RUN pip3 install  --no-cache-dir --prefer-binary transformers
+
+FROM torch AS torch-transformer
+RUN pip3 install  --no-cache-dir --prefer-binary transformers
+
+#todo optimisation
