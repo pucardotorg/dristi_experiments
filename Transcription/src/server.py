@@ -83,6 +83,6 @@ class Server:
             # Ensure the secure flag is set to True if using a secure WebSocket protocol (wss://)
             return websockets.serve(self.handle_websocket, self.host, self.port, ssl=ssl_context)
         else:
-            print(f"WebSocket server ready to accept secure connections on {self.host}:{self.port}")
+            print(f"WebSocket server ready to accept connections on {self.host}:{self.port}")
             return websockets.serve(self.handle_websocket, self.host, self.port)
 

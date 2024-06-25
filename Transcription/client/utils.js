@@ -28,11 +28,11 @@ function initWebSocket() {
     if (selectedInputSource === 'file') {
         fileInput.disabled = false;
     } else {
-        fileInput.disabled = false;
+        fileInput.disabled = true;
     }
 
     language = selectedLanguage !== 'multilingual' ? selectedLanguage : null;
-    
+
     if (!websocketAddress) {
         console.log("WebSocket address is required.");
         return;
@@ -91,7 +91,7 @@ function updateTranscription(transcript_data) {
             transcriptionDiv.appendChild(span);
             // textArea.value += wordData['word'] + ' ';
             console.log(span.textContent);
-            
+
         });
         textArea.value += transcript_data['text'] + ' ';
         send_original += transcript_data['text'] + '\n';
@@ -100,7 +100,7 @@ function updateTranscription(transcript_data) {
     } else {
         // Fallback to plain text
         transcriptionDiv.textContent += transcript_data['text'] + '\n';
-        
+
     }
 
     // Update the language information
@@ -131,13 +131,18 @@ function save_text() {
             end_time: end_time
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Server response:', data);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok.');
+            return response.json();
+        })
+        .then(data => {
+            console.log('Server response:', data);
+            alert('Transcription saved successfully!');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to save transcription: ' + error.message);
+        });
     document.getElementById('save_the_transcription').disabled = false;
     document.getElementById('editable-transcription').value = '';
     document.getElementById('transcription').textContent = '';
@@ -261,7 +266,7 @@ function sendAudioConfig() {
             bufferSize: bufferSize,
             channels: 1, // Assuming mono channel
             language: language,
-            processing_strategy: selectedStrategy, 
+            processing_strategy: selectedStrategy,
             processing_args: processingArgs
         }
     };
@@ -274,7 +279,7 @@ function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
     if (inputSampleRate === outputSampleRate) {
         return buffer;
     }
-    var nextOffsetBuffer, accum, count, i; 
+    var nextOffsetBuffer, accum, count, i;
     var sampleRateRatio = inputSampleRate / outputSampleRate;
     var newLength = Math.round(buffer.length / sampleRateRatio);
     var result = new Float32Array(newLength);
@@ -282,8 +287,9 @@ function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
     var offsetBuffer = 0;
     while (offsetResult < result.length) {
         nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
-        accum = 0, count = 0;
-        for (var i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+        accum = 0;
+        count = 0;
+        for (i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
             accum += buffer[i];
             count++;
         }

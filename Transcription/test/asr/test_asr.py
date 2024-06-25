@@ -20,7 +20,7 @@ class TestWhisperASR(unittest.TestCase):
         self.similarity_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
     def load_annotations(self):
-        with open(self.annotations_path, 'r') as file:
+        with open(self.annotations_path) as file:
             return json.load(file)
 
     def get_audio_segment(self, file_path, start, end):
