@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install any needed packages
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -qq update \
-    && apt-get -qq install \
+    && apt-get -qq install --no-install-recommends \
                    ffmpeg \
                    libsndfile1 \
                    python3-pip \
@@ -20,8 +20,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PyTorch and torchvision with CUDA support
-RUN pip3 install torch==2.0.0+cu118 torchvision==0.15.0+cu118 torchaudio==2.0.0+cu118 -f https://download.pytorch.org/whl/cu118/torch_stable.html
-
+RUN pip3 install --no-cache-dir torch==2.0.0+cu118 torchvision==0.15.0+cu118 torchaudio==2.0.0+cu118 -f https://download.pytorch.org/whl/cu118/torch_stable.html
 # Copy the requirements.txt file
 COPY requirements.txt requirements.txt
 

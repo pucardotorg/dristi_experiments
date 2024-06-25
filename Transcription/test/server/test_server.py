@@ -137,7 +137,7 @@ class TestServer(unittest.TestCase):
         Returns:
             dict: A dictionary containing expected transcriptions for test audio files.
         """
-        with open(self.annotations_path, 'r') as file:
+        with open(self.annotations_path) as file:
             return json.load(file)
 
 if __name__ == '__main__':
