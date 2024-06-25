@@ -5,9 +5,7 @@ async def save_audio_to_file(audio_data, file_name, audio_dir="audio_files", aud
     """
     Saves the audio data to a file.
 
-    :param client_id: Unique identifier for the client.
     :param audio_data: The audio data to save.
-    :param file_counters: Dictionary to keep track of file counts for each client.
     :param audio_dir: Directory where audio files will be saved.
     :param audio_format: Format of the audio file.
     :return: Path to the saved audio file.

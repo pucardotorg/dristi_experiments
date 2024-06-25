@@ -68,35 +68,37 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
             asyncio.create_task(self.process_audio_async(websocket, vad_pipeline, asr_pipeline))
     
     async def process_audio_async(self, websocket, vad_pipeline, asr_pipeline):
-        """
-        Asynchronously process audio for activity detection and transcription.
+            """
+            Asynchronously process audio for activity detection and transcription.
 
-        This method performs heavy processing, including voice activity detection and transcription of
-        the audio data. It sends the transcription results through the WebSocket connection.
+            This method performs voice activity detection and transcription of the audio data.
+            It sends the transcription results through the WebSocket connection if speech is detected.
 
-        Args:
-            websocket (Websocket): The WebSocket connection for sending transcriptions.
-            vad_pipeline: The voice activity detection pipeline.
-            asr_pipeline: The automatic speech recognition pipeline.
-        """   
-        start = time.time()
-        vad_results = await vad_pipeline.detect_activity(self.client)
+            Args:
+                websocket (Websocket): WebSocket connection for sending transcriptions.
+                vad_pipeline: Voice activity detection pipeline.
+                asr_pipeline: Automatic speech recognition pipeline.
+            """
+            try:
+                start = time.time()
+                vad_results = await vad_pipeline.detect_activity(self.client)
 
-        if len(vad_results) == 0:
-            self.client.scratch_buffer.clear()
-            self.client.buffer.clear()
-            self.processing_flag = False
-            return
+                if not vad_results:
+                    self._clear_buffers()
+                    return
 
-        last_segment_should_end_before = ((len(self.client.scratch_buffer) / (self.client.sampling_rate * self.client.samples_width)) - self.chunk_offset_seconds)
-        if vad_results[-1]['end'] < last_segment_should_end_before:
-            transcription = await asr_pipeline.transcribe(self.client)
-            if transcription['text'] != '':
-                end = time.time()
-                transcription['processing_time'] = end - start
-                json_transcription = json.dumps(transcription) 
-                await websocket.send(json_transcription)
-            self.client.scratch_buffer.clear()
-            self.client.increment_file_counter()
-        
-        self.processing_flag = False
+                last_segment_end_time = ((len(self.client.scratch_buffer) / 
+                                        (self.client.sampling_rate * self.client.samples_width)) - 
+                                        self.chunk_offset_seconds)
+
+                if vad_results[-1]['end'] < last_segment_end_time:
+                    transcription = await asr_pipeline.transcribe(self.client)
+                    if transcription['text']:
+                        transcription['processing_time'] = time.time() - start
+                        await websocket.send(json.dumps(transcription))
+                    self._clear_buffers()
+                    self.client.increment_file_counter()
+            except Exception as e:
+                print(f"Error during audio processing: {str(e)}")
+            finally:
+                self.processing_flag = False

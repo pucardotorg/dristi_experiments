@@ -113,31 +113,43 @@ class FasterWhisperASR(ASRInterface):
         model_size = kwargs.get('model_size', "large-v3")
         # Run on GPU with FP16
         self.asr_pipeline = WhisperModel(model_size, device="cuda", compute_type="float16")
-
-    async def transcribe(self, client):
-        file_path = await save_audio_to_file(client.scratch_buffer, client.get_file_name())
-
-        language = None if client.config['language'] is None else language_codes.get(client.config['language'].lower())
-        segments, info = self.asr_pipeline.transcribe(file_path, word_timestamps=True, language=language)
         
-        segments = list(segments)  # The transcription will actually run here.
-        identifier = file_path.split('/')[1].split('_')[0]
-        dest_folder_path = f"audio_uploads/{identifier}"
-        os.makedirs(dest_folder_path, exist_ok=True)
-        dest_file_path = os.path.join(dest_folder_path, os.path.basename(file_path))
-        shutil.copy2(file_path, dest_file_path)
-        # print(file_path)
-        os.remove(file_path)
-        flattened_words = [word for segment in segments for word in segment.words]
-        # print(f"Transcription: {flattened_words}")
-        to_return = {
-        "language": info.language,
-        "language_probability": info.language_probability,
-        "text": ' '.join([s.text.strip() for s in segments]),
-        "words":
-            [
-                {"word": w.word, "start": w.start, "end": w.end, "probability":w.probability} for w in flattened_words
-            ]
-        }
-        return to_return
+    async def transcribe(self, client):
+        try:
+            file_path = await save_audio_to_file(client.scratch_buffer, client.get_file_name())
+
+            language = None if client.config['language'] is None else language_codes.get(client.config['language'].lower())
+            segments, info = self.asr_pipeline.transcribe(file_path, word_timestamps=True, language=language)
+            
+            segments = list(segments)  # The transcription will actually run here.
+            identifier = file_path.split('/')[1].split('_')[0]
+            dest_folder_path = f"audio_uploads/{identifier}"
+            dest_file_path = os.path.join(dest_folder_path, os.path.basename(file_path))
+
+            try:
+                os.makedirs(dest_folder_path, exist_ok=True)
+                shutil.copy2(file_path, dest_file_path)
+            except IOError as e:
+                print(f"File operation error: {e}")
+                raise
+            finally:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+            flattened_words = [word for segment in segments for word in segment.words]
+
+            to_return = {
+                "language": info.language,
+                "language_probability": info.language_probability,
+                "text": ' '.join(s.text.strip() for s in segments),
+                "words": [
+                    {"word": w.word, "start": w.start, "end": w.end, "probability": w.probability}
+                    for w in flattened_words
+                ]
+            }
+            return to_return
+
+        except Exception as e:
+            print(f"Transcription error: {e}")
+            raise
 

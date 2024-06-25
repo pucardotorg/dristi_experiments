@@ -34,13 +34,27 @@ class PyannoteVAD(VADInterface):
         self.vad_pipeline.instantiate(pyannote_args)
 
     async def detect_activity(self, client):
-        audio_file_path = await save_audio_to_file(client.scratch_buffer, client.get_file_name())
-        vad_results = self.vad_pipeline(audio_file_path)
-        remove(audio_file_path)
-        vad_segments = []
-        if len(vad_results) > 0:
-            vad_segments = [
-                {"start": segment.start, "end": segment.end, "confidence": 1.0}
-                for segment in vad_results.itersegments()
-            ]
-        return vad_segments
+        audio_file_path = None
+        try:
+            audio_file_path = await save_audio_to_file(client.scratch_buffer, client.get_file_name)
+            vad_results = self.vad_pipeline(audio_file_path)
+            
+            vad_segments = []
+            if len(vad_results) > 0:
+                vad_segments = [
+                    {"start": segment.start, "end": segment.end, "confidence": 1.0}
+                    for segment in vad_results.itersegments()
+                ]
+            
+            return vad_segments
+
+        except Exception as e:
+            print(f"Error in detect_activity: {str(e)}")
+            return []
+
+        finally:
+            if audio_file_path:
+                try:
+                    remove(audio_file_path)
+                except Exception as e:
+                    print(f"Failed to remove temporary audio file: {str(e)}")
