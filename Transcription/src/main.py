@@ -41,6 +41,8 @@ def main():
         print("Server shutdown requested.")
         raise
     except Exception as e:
+        print(f"Unhandled exception: {e}")
+        raise
 
 if __name__ == "__main__":
     main()

@@ -26,7 +26,7 @@ class PyannoteVAD(VADInterface):
             auth_token = kwargs.get('auth_token')
         
         if auth_token is None:
-            raise ValueError("Missing required env var in PYANNOTE_AUTH_TOKEN or argument in --vad-args: 'auth_token'")
+            raise ValueError("Authentication token is required but not provided. Please set the PYANNOTE_AUTH_TOKEN environment variable or pass 'auth_token' as an argument in --vad-args.")
         
         pyannote_args = kwargs.get('pyannote_args', {"onset": 0.5, "offset": 0.5, "min_duration_on": 0.3, "min_duration_off": 0.3})
         self.model = Model.from_pretrained(model_name, use_auth_token=auth_token)
