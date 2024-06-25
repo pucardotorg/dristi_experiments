@@ -222,7 +222,7 @@ export default function DataValidation() {
             </Grid>
             <Grid item xs={8} sm={9} md={10} lg={11}>
               <Typography variant="body1" align="right" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {jsonData && jsonData.match_status && Object.entries(jsonData.match_status).map(([key, value]) => (
+                {jsonData?.match_status && Object.entries(jsonData.match_status).map(([key, value]) => (
                   <div key={key}>
                     <p>{key}: {value === 0 ? 'No match' : 'Match'}</p>
                   </div>

@@ -90,6 +90,7 @@ export default function DataExtraction() {
         .catch((error) => {
           console.error('Error submitting photo:', error);
           setLoading(false);
+          alert('Failed to submit the photo. Please try again');
         });
     }
   };
