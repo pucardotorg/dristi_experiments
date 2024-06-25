@@ -14,7 +14,7 @@ def transcribe_file(file_path, model_size="large-v3", device="cuda", compute_typ
 # Example usage
 
 def find_client_directory(base_path, client_id):
-    for root, dirs, files in os.walk(base_path):
+    for root, dirs, _ in os.walk(base_path):
         print(dirs)
         if client_id in dirs:
             return os.path.join(root, client_id)

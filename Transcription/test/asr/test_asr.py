@@ -4,7 +4,6 @@ import json
 import asyncio
 from sentence_transformers import SentenceTransformer, util
 from pydub import AudioSegment
-import argparse
 from src.asr.asr_factory import ASRFactory
 from src.client import Client
 

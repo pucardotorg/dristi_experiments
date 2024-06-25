@@ -38,4 +38,6 @@ class BufferingStrategyFactory:
         if type == "silence_at_end_of_chunk":
             return SilenceAtEndOfChunk(client, **kwargs)
         else:
-            raise ValueError(f"Unknown buffering strategy type: {type}")
+            supported_types = ['silence_at_end_of_chunk']  # Extend this list as more types are added
+            if type not in supported_types:
+               raise ValueError(f"Unknown buffering strategy type: {type}. Supported types: {', '.join(supported_types)}")

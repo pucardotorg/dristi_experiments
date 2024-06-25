@@ -230,7 +230,9 @@ function stopRecording() {
         processor = null;
     }
     if (context) {
-        context.close().then(() => context = null);
+        context.close().then(() => {
+            context = null;
+        });
     }
     var d = new Date();
     end_time[0] = d.getHours();
@@ -272,14 +274,15 @@ function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
     if (inputSampleRate === outputSampleRate) {
         return buffer;
     }
+    var nextOffsetBuffer, accum, count, i; 
     var sampleRateRatio = inputSampleRate / outputSampleRate;
     var newLength = Math.round(buffer.length / sampleRateRatio);
     var result = new Float32Array(newLength);
     var offsetResult = 0;
     var offsetBuffer = 0;
     while (offsetResult < result.length) {
-        var nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
-        var accum = 0, count = 0;
+        nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+        accum = 0, count = 0;
         for (var i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
             accum += buffer[i];
             count++;
@@ -319,11 +322,10 @@ function convertFloat32ToInt16(buffer) {
 
 function toggleBufferingStrategyPanel() {
     var selectedStrategy = document.getElementById('bufferingStrategySelect').value;
+    var panel = document.getElementById('silence_at_end_of_chunk_options_panel');
     if (selectedStrategy === 'silence_at_end_of_chunk') {
-        var panel = document.getElementById('silence_at_end_of_chunk_options_panel');
         panel.classList.remove('hidden');
     } else {
-        var panel = document.getElementById('silence_at_end_of_chunk_options_panel');
         panel.classList.add('hidden');
     }
 }

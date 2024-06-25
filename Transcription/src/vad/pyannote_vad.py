@@ -1,13 +1,9 @@
 from os import remove
 import os
-
-from pyannote.core import Segment
 from pyannote.audio import Model
 from pyannote.audio.pipelines import VoiceActivityDetection
-
 from .vad_interface import VADInterface
 from src.audio_utils import save_audio_to_file
-
 
 class PyannoteVAD(VADInterface):
     """

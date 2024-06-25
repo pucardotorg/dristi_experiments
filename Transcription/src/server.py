@@ -2,8 +2,6 @@ import websockets
 import uuid
 import json
 import ssl
-
-from src.audio_utils import save_audio_to_file
 from src.client import Client
 
 class Server:
@@ -76,10 +74,10 @@ class Server:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             
             # Load your server's certificate and private key
-            # Replace 'your_cert_path.pem' and 'your_key_path.pem' with the actual paths to your files
+            # Ensure to configure 'certfile' and 'keyfile' with actual paths before deployment
             ssl_context.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile)
 
-            print(f"WebSocket server ready to accept secure connections on {self.host}:{self.port}")
+            print(f"WebSocket server ready to accept connections on {self.host}:{self.port}")
             
             # Pass the SSL context to the serve function along with the host and port
             # Ensure the secure flag is set to True if using a secure WebSocket protocol (wss://)
