@@ -1,0 +1,8 @@
+quart
+quart-cors
+aiohttp
+pillow
+python-Levenshtein
+einops
+timm
+accelerate
