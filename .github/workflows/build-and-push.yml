@@ -30,8 +30,6 @@ jobs:
           '$arr | split(" ") | if length == 0 then [inputs.models[].serviceName] else . end' ./config.json) 
           echo $JOB_STRATEGY_MATRIX #todo
           echo "job-strategy-matrix=$JOB_STRATEGY_MATRIX" >> $GITHUB_OUTPUT
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
   build-and-push-image:
     needs: generate-job-strategy-matrix
