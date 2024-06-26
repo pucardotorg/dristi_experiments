@@ -16,8 +16,9 @@ class Client:
         sampling_rate (int): The sampling rate of the audio data in Hz.
         samples_width (int): The width of each audio sample in bits.
     """
-    def __init__(self, client_id, sampling_rate, samples_width):
+    def __init__(self, client_id, sampling_rate, samples_width, websocket):
         self.client_id = client_id
+        self.websocket = websocket
         self.buffer = bytearray()
         self.scratch_buffer = bytearray()
         self.config = {"language": None,

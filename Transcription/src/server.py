@@ -6,7 +6,6 @@ import json
 import ssl
 import random
 
-from src.audio_utils import save_audio_to_file
 from src.client import Client
 from src.room import Room
 import base64
@@ -51,10 +50,7 @@ class Server:
             message = await websocket.recv()
             config = json.loads(message)
             room_id = config.get('room_id')
-            if (room_id in self.rooms):
-                room = self.rooms[config.get('room_id')]
-            else:
-                room = None
+            room = self.rooms[config.get('room_id')] if room_id in self.rooms else None
 
             if room is not None:
                 if config.get('type') == 'audio':
@@ -137,7 +133,6 @@ class Server:
     def update_transcription(self, config):
         original_text = config['original']
         edited_text = config['edited']
-        client_id = config['client_id']
         room_id = config['room_id']
 
         update_transcription_file(room_id, "modified", edited_text)

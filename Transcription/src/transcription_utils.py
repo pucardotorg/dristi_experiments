@@ -42,7 +42,7 @@ def update_transcription_file(room_id, file_type, text):
 
 def find_client_directory(client_id):
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../audio_uploads'))
-    if (os.path.exists(os.path.join(project_dir, client_id))):
+    if os.path.exists(os.path.join(project_dir, client_id)):
         return os.path.join(project_dir, client_id)
     return None
 
