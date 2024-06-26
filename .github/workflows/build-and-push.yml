@@ -32,12 +32,6 @@ jobs:
           echo "job-strategy-matrix=$JOB_STRATEGY_MATRIX" >> $GITHUB_OUTPUT
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        
-      - name: Expose GitHub Runtime
-        uses: crazy-max/ghaction-github-runtime@v3
-      - name: Build cache
-        run: |
-          docker buildx build -f src/Dockerfile.base . --cache-from type=gha --cache-to type=gha,mode=max 
 
   build-and-push-image:
     needs: generate-job-strategy-matrix
@@ -89,7 +83,7 @@ jobs:
         run: |
           image=$(jq -r --arg sn "${{matrix.service_name}}" '.models[] | select(.serviceName == $sn) | .serviceName' ./config.json)
           path=$(jq -r --arg sn "${{matrix.service_name}}" '.models[] | select(.serviceName == $sn) | .modelBasePath' ./config.json)
-          (cat src/Dockerfile.base ; echo ;cat "./$path/Dockerfile") | docker buildx build $(echo "$DOCKER_METADATA_OUTPUT_TAGS" | awk '{printf "-t %s ", $0}') -f - "./$path" --cache-from type=gha --cache-to type=gha,mode=max --push
+          docker buildx build $(echo "$DOCKER_METADATA_OUTPUT_TAGS" | awk '{printf "-t %s ", $0}') -f - "./$path" --cache-from type=gha --cache-to type=gha,mode=max --push
 
           
         
