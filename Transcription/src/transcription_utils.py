@@ -25,7 +25,7 @@ def read_transcription(room_id):
     # Define the path to the text_files directory
     text_files_dir = os.path.join(project_dir, 'modified_text_files')
     text_file_path = os.path.join(text_files_dir, file_name)
-    with open(text_file_path, 'r') as f:
+    with open(text_file_path) as f:
         text = f.read()
         return text
 

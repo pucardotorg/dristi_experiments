@@ -12,7 +12,7 @@ import base64
 import numpy as np
 from src.database import Database
 from src.transcription_utils import read_transcription, append_transcription, update_transcription_file, merge
-
+import torch
 
 class Server:
     """
@@ -141,7 +141,8 @@ class Server:
         merge(room_id)
 
         self.db.update_session(room_id)
-        return self.db.fetch_room_info(room_id)
+        data = self.db.fetch_room_info(room_id)
+        return data
 
     def get_current_client_id(self):
         if self.connected_clients:

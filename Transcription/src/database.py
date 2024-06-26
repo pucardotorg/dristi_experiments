@@ -48,7 +48,7 @@ class Database:
     def fetch_transcript_file(self, room_id):
         try:
             cursor = self.connection.cursor()
-            cursor.execute(f"SELECT updated_transcription from JanSarathi WHERE session_id = '{room_id}'")
+            cursor.execute("SELECT updated_transcription FROM JanSarathi WHERE session_id = ?", (room_id,))
             result = cursor.fetchall()
             url = self.minio_client.presigned_get_object(BUCKET_NAME, result[0][0], expires=timedelta(days=1))
             return url

@@ -1,5 +1,5 @@
 # Use an NVIDIA CUDA base image with Python 3
-FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
 
 ENV PYTHON_VERSION=3.10
 
@@ -16,8 +16,16 @@ RUN export DEBIAN_FRONTEND=noninteractive \
                    ffmpeg \
                    libsndfile1 \
                    python3-pip \
+                   libsqlite3-dev \
                    python${PYTHON_VERSION} \
     && rm -rf /var/lib/apt/lists/*
+
+# Update alternatives to set the default python3 version
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 && \
+    update-alternatives --set python3 /usr/bin/python${PYTHON_VERSION}
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip
 
 # Copy the requirements.txt file
 COPY requirements.txt requirements.txt
