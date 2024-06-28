@@ -8,9 +8,8 @@ class ModelClassifier:
         self.model = model
 
     @classmethod
-    async def create(cls, context):
+    async def create(cls, context, model_path='models/model.keras'):
         """Class method to initialize the model from the local path."""
-        model_path = 'models/model.keras'
 
         model = tf.keras.models.load_model(model_path)
         

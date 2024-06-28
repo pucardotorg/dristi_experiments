@@ -1,6 +1,6 @@
 import json
 
-class ModelRequest():
+class ModelRequest:
     def __init__(self, im_file):
         self.im_file = im_file
 

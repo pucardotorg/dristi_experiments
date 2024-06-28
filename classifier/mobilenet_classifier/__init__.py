@@ -1,2 +1,2 @@
 from .request import *
-from .model import *
+from .model import ModelClassifier
