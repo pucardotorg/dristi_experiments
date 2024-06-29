@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 # API endpoint
-url = "http://localhost:8000/classify_image"
+url = "http://localhost:1234/classify_image"
 
 # Image directories
 cheque_return_memo_dir = "images/cheque_return_memo"
