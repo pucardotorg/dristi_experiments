@@ -1,5 +1,3 @@
-
-
 'use client'
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './styles.css';
@@ -13,7 +11,7 @@ const Transcription = () => {
   const [globalStream, setGlobalStream] = useState(null);
   const [clientId, setClientId] = useState(null);
   const [roomId, setRoomId] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
+  // const [isRecording, setIsRecording] = useState(false);
   const [sendOriginal, setSendOriginal] = useState('');
   const [currentPosition, setCurrentPosition] = useState(0);
   const [webSocketStatus, setWebSocketStatus] = useState('Not Connected');
@@ -32,6 +30,7 @@ const Transcription = () => {
   const roomIdInputRef = useRef(null);
   const startTimeRef = useRef([0, 0, 0]);
   const endTimeRef = useRef([0, 0, 0]);
+  let isRecording = false;
 
   const bufferSize = 4096;
 
@@ -110,24 +109,40 @@ const Transcription = () => {
     }
   };
 
+
   const startRecording = () => {
-    if (!websocket || websocket.readyState !== WebSocket.OPEN) {
-      console.error("WebSocket is not connected. Please connect first.");
-      return;
-    }
-
     if (isRecording) return;
-    setIsRecording(true);
+    isRecording = true;
 
-    const inputSource = inputSourceRef.current.value;
+    const inputSource = document.querySelector('input[name="inputSource"]:checked').value;
 
     if (inputSource === 'mic') {
-      startMicRecording();
+        startMicRecording();
     } else {
-      startFileRecording();
+        startFileRecording();
     }
-  };
+};
 
+  // const startRecording = () => {
+  //   if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+  //     console.error("WebSocket is not connected. Please connect first.");
+  //     return;
+  //   }
+
+  //   if (isRecording) return;
+  //   setIsRecording(true);
+
+  //   const inputSource = inputSourceRef.current.value;
+
+  //   if (inputSource === 'mic') {
+  //     startMicRecording();
+  //   } else {
+  //     startFileRecording();
+  //   }
+  // };
+
+
+  
   const startMicRecording = () => {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const newContext = new AudioContext();
@@ -205,6 +220,10 @@ const Transcription = () => {
   };
 
   const sendAudioConfig = () => {
+    if(!newContext){
+      console.error('Audio context is not initialized');
+      return;
+    }
     const audioConfig = {
       type: 'config',
       room_id: roomId,
@@ -226,6 +245,10 @@ const Transcription = () => {
   };
 
   const processAudio = (e, source) => {
+    if (!context){
+      console.error('Audio context is not initialized');
+      return;
+    }
     const inputSampleRate = context.sampleRate;
     const outputSampleRate = 16000;
 
@@ -324,7 +347,7 @@ const Transcription = () => {
    <div className="formContainer">
   <h1>Pucar Login</h1>
   <label htmlFor="websocketAddress-login">WebSocket Address:</label>
-  <input type="text" id="websocketAddress-login" defaultValue="ws://localhost:8765" />
+  <input type="text" id="websocketAddress-login" defaultValue="https://transcription.test.bhasai.samagra.io/" />
   <button onClick={() => initWebSocket('login')}>Connect</button>
   <label htmlFor="roomId">Room Id:</label>
   <input type="text" id="roomId" ref={roomIdInputRef} placeholder="Room Id" />
@@ -342,7 +365,7 @@ const Transcription = () => {
     <div className="controls">
       <div className="controlGroup">
         <label htmlFor="websocketAddress">WebSocket Address:</label>
-        <input type="text" ref={websocketAddressRef} />
+        <input type="text" ref={websocketAddressRef} defaultValue="https://transcription.test.bhasai.samagra.io/"  />
       </div>
        <div className="controlGroup">
       <FormControl fullWidth variant="outlined"> 
@@ -372,8 +395,8 @@ const Transcription = () => {
     </div>
     <input type="file" ref={audioFileRef} accept="audio/*" />
     <div className="streamingButtons">
-      <button onClick={startRecording} disabled={isRecording}>Start Streaming</button>
-      <button onClick={stopRecording} disabled={!isRecording}>Stop Streaming</button>
+      <button onClick={startRecording}>Start Streaming</button>
+      <button onClick={stopRecording}>Stop Streaming</button>
       <button onClick={updateOriginalTranscriptionServer}>Save Transcription</button>
     </div>
 
