@@ -1,380 +1,414 @@
-// Work in Progress
+
 
 'use client'
-import React, { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import {
-  Container,
-  Typography,
-  TextField,
-  Button,
-  FormControl,
-  RadioGroup,
-  Radio,
-  FormControlLabel,
-  Input,
-  InputLabel,
-  Select,
-  MenuItem,
-} from '@material-ui/core';
+import React, { useState, useEffect, useRef } from 'react';
+import styles from './styles.css';
+import { Select, MenuItem, FormControl, InputLabel, Icon } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';  
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    background: '#f4f4f4',
-    padding: theme.spacing(2),
-  },
-  controls: {
-    margin: theme.spacing(2, 0),
-    width: '80%',
-    display: 'flex',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  controlGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  label: {
-    fontSize: '0.9em',
-    color: '#555',
-    marginBottom: theme.spacing(1),
-  },
-  transcriptionPanel: {
-    margin: theme.spacing(2, 0),
-    border: '1px solid #ddd',
-    padding: theme.spacing(2),
-    width: '80%',
-    height: '150px',
-    overflowY: 'auto',
-    background: 'white',
-  },
-  textArea: {
-    flex: 1,
-    height: '180px',
-    width: '81%',
-    padding: theme.spacing(1),
-    boxSizing: 'border-box',
-  },
-  button: {
-    marginTop: theme.spacing(2),
-    cursor: 'pointer',
-  },
-  artifactDownloadPanel: {
-    margin: theme.spacing(3, 0),
-  },
-  downloadButton: {
-    margin: theme.spacing(1),
-  },
-  formContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '300px',
-    padding: theme.spacing(2),
-    backgroundColor: 'white',
-    boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-    borderRadius: '8px',
-    marginBottom: theme.spacing(2),
-  },
-}));
+const Transcription = () => {
+  const [websocket, setWebsocket] = useState(null);
+  const [context, setContext] = useState(null);
+  const [processor, setProcessor] = useState(null);
+  const [globalStream, setGlobalStream] = useState(null);
+  const [clientId, setClientId] = useState(null);
+  const [roomId, setRoomId] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [sendOriginal, setSendOriginal] = useState('');
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [webSocketStatus, setWebSocketStatus] = useState('Not Connected');
+  const [detectedLanguage, setDetectedLanguage] = useState('Undefined');
+  const [processingTime, setProcessingTime] = useState('Undefined');
+  const [transcription, setTranscription] = useState('');
+  const [editableTranscription, setEditableTranscription] = useState('');
+  const [showLoginPanel, setShowLoginPanel] = useState(true);
+  const [transcriptionUrl, setTranscriptionUrl] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
 
-const TranscriptionPOC = () => {
-  const classes = useStyles();
+  const websocketAddressRef = useRef(null);
+  const languageSelectRef = useRef(null);
+  const inputSourceRef = useRef(null);
+  const audioFileRef = useRef(null);
+  const roomIdInputRef = useRef(null);
+  const startTimeRef = useRef([0, 0, 0]);
+  const endTimeRef = useRef([0, 0, 0]);
 
-  const [webSocketAddress, setWebSocketAddress] = useState('ws://localhost:8765');
-  const [language, setLanguage] = useState('multilingual');
-  const [inputSource, setInputSource] = useState('mic');
-  const [roomID, setRoomID] = useState('');
-  const [audioFile, setAudioFile] = useState(null);
-  const [loggedIn, setLoggedIn] = useState(false); // State to manage login status
+  const bufferSize = 4096;
 
-  const handleWebSocketAddressChange = (event) => {
-    setWebSocketAddress(event.target.value);
-  };
-
-  const handleLanguageChange = (event) => {
-    setLanguage(event.target.value);
-  };
-
-  const handleInputSourceChange = (event) => {
-    setInputSource(event.target.value);
-  };
-
-  const handleRoomIDChange = (event) => {
-    setRoomID(event.target.value);
-  };
-
-  const handleFileInputChange = (event) => {
-    const file = event.target.files[0];
-    setAudioFile(file);
-  };
-
-  const handleLogin = () => {
-    
-    setLoggedIn(true);
-    
+  useEffect(() => {
     initWebSocket();
-  };
+  }, []);
 
-  const handleLogout = () => {
-     
-    setLoggedIn(false);
-     
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-      websocket.close();
-    }
-  };
+  const initWebSocket = (offset = 'config') => {
+    const websocketAddress = offset === 'config' 
+      ? websocketAddressRef.current?.value 
+      : document.getElementById('websocketAddress-login').value;
 
-  const initWebSocket = () => {
-    
-    const selectedLanguage = language !== 'multilingual' ? language : null;
-    const audioSource = inputSource === 'file' ? 'file' : 'mic';
-
-    const wsAddress = loggedIn ? webSocketAddress : document.getElementById('websocketAddress-login').value;
-
-    if (!wsAddress) {
+    if (!websocketAddress) {
       console.log("WebSocket address is required.");
       return;
     }
 
-    websocket = new WebSocket(wsAddress);
-    websocket.onopen = () => {
+    const ws = new WebSocket(websocketAddress);
+
+    ws.onopen = () => {
       console.log("WebSocket connection established");
-      document.getElementById("webSocketStatus").textContent = 'Connected';
-       
+      setWebSocketStatus('Connected');
     };
-    websocket.onclose = event => {
+
+    ws.onclose = (event) => {
       console.log("WebSocket connection closed", event);
-      document.getElementById("webSocketStatus").textContent = 'Not Connected';
-    
+      setWebSocketStatus('Not Connected');
     };
-    websocket.onmessage = event => {
+
+    ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log(data);
-       
       if (data.type === 'joined_room' || data.type === 'refresh_transcription') {
-        
-        setRoomID(data.room_id);  
+        handleRoomJoined(data);
       } else {
-      
         updateTranscription(data);
       }
     };
+
+    setWebsocket(ws);
   };
 
-  const joinRoom = () => {
-    const room_id = document.getElementById('room-id').value;
+  const handleRoomJoined = (data) => {
+    setClientId(data.client_id);
+    setRoomId(data.room_id);
+    setTranscriptionUrl(data.transcript_url);
+    setAudioUrl(data.audio_url);
+    if (data.type === 'joined_room') {
+      setShowLoginPanel(false);
+    }
+  };
+
+  const updateTranscription = (transcriptData) => {
+    if (transcriptData.words && transcriptData.words.length > 0) {
+      const newTranscription = transcriptData.words.map(wordData => {
+        const probability = wordData.probability;
+        let color = 'black';
+        if (probability > 0.9) color = 'green';
+        else if (probability > 0.6) color = 'orange';
+        else color = 'red';
+        return `<span style="color: ${color}">${wordData.word} </span>`;
+      }).join('');
+      setTranscription(prev => prev + newTranscription + '<br>');
+    } else {
+      setTranscription(prev => prev + transcriptData.text + ' ');
+    }
+    setEditableTranscription(prev => prev + transcriptData.text + ' ');
+    setSendOriginal(prev => prev + transcriptData.text + '\n');
+
+    if (transcriptData.language && transcriptData.language_probability) {
+      setDetectedLanguage(`${transcriptData.language} (${transcriptData.language_probability.toFixed(2)})`);
+    }
+
+    if (transcriptData.processing_time) {
+      setProcessingTime(`Processing time: ${transcriptData.processing_time.toFixed(2)} seconds`);
+    }
+  };
+
+  const startRecording = () => {
+    if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+      console.error("WebSocket is not connected. Please connect first.");
+      return;
+    }
+
+    if (isRecording) return;
+    setIsRecording(true);
+
+    const inputSource = inputSourceRef.current.value;
+
+    if (inputSource === 'mic') {
+      startMicRecording();
+    } else {
+      startFileRecording();
+    }
+  };
+
+  const startMicRecording = () => {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const newContext = new AudioContext();
+    setContext(newContext);
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      setGlobalStream(stream);
+      const input = newContext.createMediaStreamSource(stream);
+      const newProcessor = newContext.createScriptProcessor(bufferSize, 1, 1);
+      newProcessor.onaudioprocess = processAudio;
+      input.connect(newProcessor);
+      newProcessor.connect(newContext.destination);
+      setProcessor(newProcessor);
+
+      sendAudioConfig();
+    }).catch(error => console.error('Error accessing microphone', error));
+  };
+
+  const startFileRecording = () => {
+    const file = audioFileRef.current.files[0];
+    if (!file) {
+      console.error('No file selected');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const arrayBuffer = reader.result;
+      createAudioPipeline(arrayBuffer);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const createAudioPipeline = (arrayBuffer) => {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const newContext = new AudioContext();
+    setContext(newContext);
+
+    newContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+      const source = newContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(newContext.destination);
+
+      const newProcessor = newContext.createScriptProcessor(bufferSize, 1, 1);
+      newProcessor.onaudioprocess = (e) => processAudio(e, source);
+      source.connect(newProcessor);
+      newProcessor.connect(newContext.destination);
+
+      source.start(0, currentPosition);
+      setProcessor(newProcessor);
+
+      sendAudioConfig();
+    }, (error) => {
+      console.error('Error decoding audio data:', error);
+    });
+  };
+
+  const stopRecording = () => {
+    if (!isRecording) return;
+    setIsRecording(false);
+
+    if (globalStream) {
+      globalStream.getTracks().forEach(track => track.stop());
+    }
+    if (processor) {
+      setCurrentPosition(context.currentTime);
+      processor.disconnect();
+      setProcessor(null);
+    }
+    if (context) {
+      context.close().then(() => setContext(null));
+    }
+    const now = new Date();
+    endTimeRef.current = [now.getHours(), now.getMinutes(), now.getSeconds()];
+  };
+
+  const sendAudioConfig = () => {
+    const audioConfig = {
+      type: 'config',
+      room_id: roomId,
+      client_id: clientId,
+      data: {
+        sampleRate: context.sampleRate,
+        bufferSize: bufferSize,
+        channels: 1,
+        language: languageSelectRef.current.value !== 'multilingual' ? languageSelectRef.current.value : null,
+        processing_strategy: 'silence_at_end_of_chunk',
+        processing_args: {
+          chunk_length_seconds: 1,
+          chunk_offset_seconds: 0.1
+        }
+      }
+    };
+
+    websocket.send(JSON.stringify(audioConfig));
+  };
+
+  const processAudio = (e, source) => {
+    const inputSampleRate = context.sampleRate;
+    const outputSampleRate = 16000;
+
+    const left = e.inputBuffer.getChannelData(0);
+    const downsampledBuffer = downsampleBuffer(left, inputSampleRate, outputSampleRate);
+    const audioData = convertFloat32ToInt16(downsampledBuffer);
     if (websocket && websocket.readyState === WebSocket.OPEN) {
+      const audioBase64 = bufferToBase64(audioData);
       const message = {
-        type: 'join_room',
-        room_id: room_id,
+        type: 'audio',
+        data: audioBase64,
+        room_id: roomId,
+        client_id: clientId,
       };
       websocket.send(JSON.stringify(message));
     }
   };
-   const startRecording = () => {
-   
-    console.log('Starting recording...');
+
+  const downsampleBuffer = (buffer, inputSampleRate, outputSampleRate) => {
+    if (inputSampleRate === outputSampleRate) {
+      return buffer;
+    }
+    const sampleRateRatio = inputSampleRate / outputSampleRate;
+    const newLength = Math.round(buffer.length / sampleRateRatio);
+    const result = new Float32Array(newLength);
+    let offsetResult = 0;
+    let offsetBuffer = 0;
+    while (offsetResult < result.length) {
+      const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+      let accum = 0, count = 0;
+      for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+        accum += buffer[i];
+        count++;
+      }
+      result[offsetResult] = accum / count;
+      offsetResult++;
+      offsetBuffer = nextOffsetBuffer;
+    }
+    return result;
   };
-const stopRecording = () => {
-    
-    console.log('Starting recording...');
+
+  const convertFloat32ToInt16 = (buffer) => {
+    const l = buffer.length;
+    const buf = new Int16Array(l);
+    for (let i = 0; i < l; i++) {
+      buf[i] = Math.min(1, buffer[i]) * 0x7FFF;
+    }
+    return buf.buffer;
   };
-const save_text = () => {
-    
-    console.log('Starting recording...');
+
+  const bufferToBase64 = (buffer) => {
+    const binary = String.fromCharCode.apply(null, new Uint8Array(buffer));
+    return window.btoa(binary);
   };
 
   const createRoom = () => {
     if (websocket && websocket.readyState === WebSocket.OPEN) {
       const message = {
         type: 'create_room',
-        room_id: roomID,
+        room_id: roomId,
       };
       websocket.send(JSON.stringify(message));
     }
   };
 
-  const updateTranscription = (transcript_data) => {
-   
-    console.log('Updating transcription:', transcript_data);
-   
+  const joinRoom = () => {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      const message = {
+        type: 'join_room',
+        room_id: roomIdInputRef.current.value,
+      };
+      websocket.send(JSON.stringify(message));
+    }
+  };
+
+  const updateOriginalTranscriptionServer = () => {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      const message = {
+        type: 'update_transcription',
+        original: sendOriginal,
+        edited: editableTranscription,
+        client_id: roomId,
+        room_id: roomId,
+        start_time: startTimeRef.current,
+        end_time: endTimeRef.current
+      };
+      websocket.send(JSON.stringify(message));
+    }
   };
 
   return (
-    <Container className={classes.root}>
-      {!loggedIn && (  
-        <div id="login-panel" className={classes.formContainer}>
-          <Typography variant="h3">Pucar Login</Typography>
-          <InputLabel className={classes.label} htmlFor="websocketAddress-login">WebSocket Address:</InputLabel>
-          <Input
-            id="websocketAddress-login"
-            type="text"
-            value={webSocketAddress}
-            onChange={handleWebSocketAddressChange}
-          />
-          <InputLabel className={classes.label} htmlFor="room-id">Room Id:</InputLabel>
-          <Input
-            id="room-id"
-            type="text"
-            value={roomID}
-            onChange={handleRoomIDChange}
-          />
-          <div className={classes.controls}>
-            <Button variant="contained" color="primary" onClick={handleLogin} className={classes.button}>
-              Connect
-            </Button>
-            <Button variant="contained" color="primary" onClick={joinRoom} className={classes.button}>
-              Join Room
-            </Button>
-            <Button variant="contained" color="primary" onClick={createRoom} className={classes.button}>
-              Create Room
-            </Button>
-          </div>
-        </div>
+    <div className="container">
+  {showLoginPanel ? (
+  <div className="loginPanel">
+  
+   <div className="formContainer">
+  <h1>Pucar Login</h1>
+  <label htmlFor="websocketAddress-login">WebSocket Address:</label>
+  <input type="text" id="websocketAddress-login" defaultValue="ws://localhost:8765" />
+  <button onClick={() => initWebSocket('login')}>Connect</button>
+  <label htmlFor="roomId">Room Id:</label>
+  <input type="text" id="roomId" ref={roomIdInputRef} placeholder="Room Id" />
+  <button onClick={joinRoom}>Join Room</button>
+  <button onClick={createRoom}>Create Room</button>
+</div>
+
+
+  </div>
+      ) : (
+         <div className="recordingPanel">
+  <div className="formContainer">
+    <h1>Transcription POC</h1>
+    <h3>Room Id - <span>{roomId}</span></h3>
+    <div className="controls">
+      <div className="controlGroup">
+        <label htmlFor="websocketAddress">WebSocket Address:</label>
+        <input type="text" ref={websocketAddressRef} />
+      </div>
+       <div className="controlGroup">
+      <FormControl fullWidth variant="outlined"> 
+        <InputLabel id="languageSelectLabel">Language</InputLabel>
+        <Select
+          labelId="languageSelectLabel"
+          id="languageSelect"
+          ref={languageSelectRef}
+          defaultValue="multilingual"
+          label="Language"
+          IconComponent={ExpandMoreIcon}   
+        >
+          <MenuItem value="multilingual">Multilingual</MenuItem>
+          <MenuItem value="english">English</MenuItem>
+          <MenuItem value="hindi">Hindi</MenuItem>
+        </Select>
+      </FormControl>
+    </div>
+      <button onClick={() => initWebSocket()}>Connect</button>
+    </div>
+    <div className="inputSourceContainer">
+      <label>Input Source:</label>
+      <input type="radio" id="micInput" name="inputSource" value="mic" defaultChecked ref={inputSourceRef} />
+      <label htmlFor="micInput">Microphone</label>
+      <input type="radio" id="fileInput" name="inputSource" value="file" ref={inputSourceRef} />
+      <label htmlFor="fileInput">File</label>
+    </div>
+    <input type="file" ref={audioFileRef} accept="audio/*" />
+    <div className="streamingButtons">
+      <button onClick={startRecording} disabled={isRecording}>Start Streaming</button>
+      <button onClick={stopRecording} disabled={!isRecording}>Stop Streaming</button>
+      <button onClick={updateOriginalTranscriptionServer}>Save Transcription</button>
+    </div>
+
+    {transcriptionUrl && audioUrl && (
+      <div className="artifactDownloadPanel">
+        <a href={transcriptionUrl} target="_blank" rel="noopener noreferrer">
+          <button className="downloadButton">
+            <i className="fa fa-download"></i>
+            <span>Download Transcription</span>
+          </button>
+        </a>
+        <a href={audioUrl} target="_blank" rel="noopener noreferrer">
+          <button className="downloadButton">
+            <i className="fa fa-download"></i>
+            <span>Download Audio</span>
+          </button>
+        </a>
+      </div>
+    )}
+
+    <div className="transcription" dangerouslySetInnerHTML={{ __html: transcription }}></div>
+    <textarea
+      className="editableTranscription"
+      value={editableTranscription}
+      onChange={(e) => setEditableTranscription(e.target.value)}
+    ></textarea>
+    <div>WebSocket: <span>{webSocketStatus}</span></div>
+    <div>Detected Language: <span>{detectedLanguage}</span></div>
+    <div>Last Processing Time: <span>{processingTime}</span></div>
+  </div>
+</div>
+
       )}
+    </div>
+  );
+};
 
-      {loggedIn && (  
-        <>
-          <Typography variant="h1">Transcription POC</Typography>
-          <Typography variant="h3">Room Id - <span id="meet-id">{roomID}</span></Typography>
-
-          <div className={classes.controls}>
-            <div className={classes.controlGroup}>
-              <InputLabel className={classes.label} htmlFor="websocketAddress">WebSocket Address:</InputLabel>
-              <Input
-                id="websocketAddress"
-                type="text"
-                value={webSocketAddress}
-                onChange={handleWebSocketAddressChange}
-              />
-            </div>
-
-            <div className={classes.controlGroup}>
-              <InputLabel className={classes.label} htmlFor="languageSelect">Language:</InputLabel>
-              <Select
-                id="languageSelect"
-                value={language}
-                onChange={handleLanguageChange}
-              >
-                <MenuItem value="multilingual">Multilingual</MenuItem>
-                <MenuItem value="english">English</MenuItem>
-                <MenuItem value="hindi">Hindi</MenuItem>
-              </Select>
-            </div>
-
-            <div className={classes.controlGroup}>
-              <FormControl component="fieldset">
-                <InputLabel className={classes.label}>Input Source:</InputLabel>
-                <RadioGroup row aria-label="inputSource" name="inputSource" value={inputSource} onChange={handleInputSourceChange}>
-                  <FormControlLabel value="mic" control={<Radio />} label="Microphone" />
-                  <FormControlLabel value="file" control={<Radio />} label="File" />
-                </RadioGroup>
-              </FormControl>
-            </div>
-
-            {inputSource === 'file' && (
-              <div className={classes.controlGroup}>
-                <input
-                  accept="audio/*"
-                  style={{ display: 'none' }}
-                  id="audio_file"
-                  type="file"
-                  onChange={handleFileInputChange}
-                />
-                <label htmlFor="audio_file">
-                  <Button variant="contained" component="span" className={classes.button}>
-                    Select Audio File
-                  </Button>
-                </label>
-              </div>
-            )}
-
-            <Button variant="contained" color="primary" onClick={initWebSocket} className={classes.button}>
-              Connect
-            </Button>
-
-            <Button variant="contained" color="secondary" onClick={handleLogout} className={classes.button}>
-              Logout
-            </Button>
-          </div>
-
-          <div id="transcription" className={classes.transcriptionPanel}>
-           
-            </div>
-
-            <textarea
-              id="editable-transcription"
-              className={classes.textArea}
-              placeholder="Editable Transcription"
-              rows={5}
-            />
-
-            <div className={classes.controls}>
-              <Button
-                id="startButton"
-                variant="contained"
-                color="primary"
-                onClick={startRecording}
-                className={classes.button}
-              >
-                Start Recording
-              </Button>
-
-              <Button
-                id="stopButton"
-                variant="contained"
-                color="secondary"
-                onClick={stopRecording}
-                className={classes.button}
-              >
-                Stop Recording
-              </Button>
-
-              <Button
-                id="save_the_transcription"
-                variant="contained"
-                color="primary"
-                onClick={save_text}
-                className={classes.button}
-              >
-                Save Transcription
-              </Button>
-            </div>
-
-            <div id="artifact-download-panel" className={classes.artifactDownloadPanel}>
-              <Button
-                id="trans-download-link"
-                variant="contained"
-                color="primary"
-                className={classes.downloadButton}
-                href=""
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Download Transcription
-              </Button>
-              <Button
-                id="audio-download-link"
-                variant="contained"
-                color="primary"
-                className={classes.downloadButton}
-                href=""
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Download Audio
-              </Button>
-            </div>
-          </>
-        )}
-      </Container>
-    );
-  };
-
-  export default TranscriptionPOC;
+export default Transcription;
