@@ -1,5 +1,10 @@
 # Real-Time Transcription Service
 
+## Problem Statement
+All judges have typist assistants who help them type out orders, judgements and frame witness depositions. The judge dictates the orders/judgements/depositions to the typist who then manually types the contents, proofreads them, makes corrections and then sends it back to the judge for signing. The objective of the PoC is to enable speech to text transcription so that the manual effort of typing the orders and judgements can be saved. 
+
+[Detailed Problem Statement Document](https://docs.google.com/document/d/18cPXS3v0DVsTyRsxc-GNYWkmMqV3qqYeKEa8Adki1lM)
+
 ## Overview
 The Real-Time Transcription Service allows users to create and join rooms where they can send audio data to be transcribed in real-time. Users can spectate the transcription, update it, and save the final transcript. When the transcription is saved, the service merges audio segments into a single file and uploads both the transcript and audio file to MinIO, providing download links to all participants.
 
@@ -93,7 +98,7 @@ The "volume" stuff will allow you not to re-download the huggingface models each
 sudo docker run --gpus all -p 8765:8765 -e PYANNOTE_AUTH_TOKEN='VAD_TOKEN_HERE' transcription-service
 ```
 
-## Normal, Manual Installation
+## Manual Installation
 
 To set up the Transcription Service server, you need Python 3.8 or later and the following packages:
 
@@ -160,6 +165,31 @@ python3 -m src.main --help
 - **Speech-to-Text**: Utilizes [Faster Whisper](https://github.com/SYSTRAN/faster-whisper) or OpenAI's Whisper model (openai/whisper-large-v3) for accurate transcription. Faster Whisper is the default as it is much faster
 
 ## Technical Overview
+
+### Room
+
+#### Overview
+A room is a realtime transcription session where multiple users can join and get real time transcription and can update the transcription or download audio and transcription file.
+The idea is a Judge and Typist will be a part of a transcription session and the both will be able to spectate or update the transcription in realtime.
+
+#### Need
+Since both judge and typist should be able to record and update the transcription for a transcription session we cant start a new session for each user. Rather we need a functionality where user can create a new session or join a older session to view or update older transcription. For this a in memory dictionary keeps track of the session and the user who are a part of the room. Everytime there is an update the message is broadcasted to all the users, to share real time updates.
+
+#### Working
+Whenever user clicks on create room in the a new room object with default config is created and a new entry is created in an inmemory dictionary. It stores all the clients that are connected to this room. This helps in broadcasting any message. Whenever user leaves a room the user is removed from this list of users. For any user to connect to a room that room should be present in the dictionary. This room id is also used to store transcription and audio file in the database and later helps to generate download link for these artifacts. 
+
+### Model Used
+By default if you dont provide any argument for ast it uses whisper large-v3 model.
+We recommend using this model because of following reasons
+- The translation accuracy of whisper large-v3 model for different languages is way higher.
+- Lower WER for various languages.
+- Improved continuous numbers transcription as compared to other model.
+
+#### Switch to different model
+If you want to switch to a different model you need to run the src.main with the following args
+```bash
+python3 -m src.main --asr-args '{"model_size": "large"}'
+```
 
 ### Settings
 
@@ -241,6 +271,13 @@ Please make sure that the end variables are in place for example for the VAD aut
 ### Dependence on Audio Files
 
 Currently, Transcription Service processes audio by saving chunks to files and then running these files through the models.
+
+### Introduce other ASR models
+
+Transcription Service currently support faster whisper and whisper asr. In future we should add support for following asr models.
+1. [**Bhashini (Highest Priority)**](https://github.com/pucardotorg/dristi_experiments/issues/19)
+2. WhisperX
+3. OpenAI Whisper API
 
 ## Contributors
 
