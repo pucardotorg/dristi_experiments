@@ -129,9 +129,9 @@ font-weight: bold;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
+ 
+  color: black;
+  border: 1px solid;
   border-radius: 4px;
   cursor: pointer;
   text-decoration: none;

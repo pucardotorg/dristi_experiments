@@ -129,7 +129,7 @@ const handleCommentSubmit = () => {
     text: comment,
   };
 
-  fetch(`${process.env.NEXT_PUBLIC_REPORT_ISSUE_API}/submit-issue`, {
+  fetch(`${process.env.NEXT_PUBLIC_REPORT_ISSUE_API}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
