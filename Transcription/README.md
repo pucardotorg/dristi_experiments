@@ -1,7 +1,7 @@
 # Real-Time Transcription Service
 
 ## Problem Statement
-All judges have typist assistants who help them type out orders, judgements and frame witness depositions. The judge dictates the orders/judgements/depositions to the typist who then manually types the contents, proofreads them, makes corrections and then sends it back to the judge for signing. The objective of the PoC is to enable speech to text transcription so that the manual effort of typing the orders and judgements can be saved. 
+All judges have typist assistants who help them type out orders, judgments, and frame witness depositions. The judge dictates the orders, judgments, and depositions to the typist, who then manually types the contents, proofreads them, makes corrections, and then sends it back to the judge for signing. The objective of the PoC is to enable speech-to-text transcription so that the manual effort of typing the orders and judgments can be saved.
 
 [Detailed Problem Statement Document](https://docs.google.com/document/d/18cPXS3v0DVsTyRsxc-GNYWkmMqV3qqYeKEa8Adki1lM)
 
@@ -169,24 +169,24 @@ python3 -m src.main --help
 ### Room
 
 #### Overview
-A room is a realtime transcription session where multiple users can join and get real time transcription and can update the transcription or download audio and transcription file.
-The idea is a Judge and Typist will be a part of a transcription session and the both will be able to spectate or update the transcription in realtime.
+A room is a real-time transcription session where multiple users can join, get real-time transcription, update the transcription, or download audio and transcription files. The idea is that a judge and typist will be part of a transcription session, and both will be able to spectate or update the transcription in real-time.
 
 #### Need
-Since both judge and typist should be able to record and update the transcription for a transcription session we cant start a new session for each user. Rather we need a functionality where user can create a new session or join a older session to view or update older transcription. For this a in memory dictionary keeps track of the session and the user who are a part of the room. Everytime there is an update the message is broadcasted to all the users, to share real time updates.
+Since both the judge and typist should be able to record and update the transcription for a transcription session, we can't start a new session for each user. Rather, we need a functionality where a user can create a new session or join an older session to view or update older transcription. For this, an in-memory dictionary keeps track of the session and the users who are part of the room. Every time there is an update, the message is broadcasted to all the users to share real-time updates.
 
 #### Working
-Whenever user clicks on create room in the a new room object with default config is created and a new entry is created in an inmemory dictionary. It stores all the clients that are connected to this room. This helps in broadcasting any message. Whenever user leaves a room the user is removed from this list of users. For any user to connect to a room that room should be present in the dictionary. This room id is also used to store transcription and audio file in the database and later helps to generate download link for these artifacts. 
+Whenever a user clicks on create room, a new room object with default config is created, and a new entry is created in an in-memory dictionary. It stores all the clients that are connected to this room, which helps in broadcasting any message. Whenever a user leaves a room, the user is removed from this list of users. For any user to connect to a room, that room should be present in the dictionary. This room ID is also used to store transcription and audio files in the database and later helps to generate download links for these artifacts.
 
 ### Model Used
-By default if you dont provide any argument for ast it uses whisper large-v3 model.
-We recommend using this model because of following reasons
-- The translation accuracy of whisper large-v3 model for different languages is way higher.
-- Lower WER for various languages.
-- Improved continuous numbers transcription as compared to other model.
+By default, if you don't provide any argument for ASR, it uses the Whisper large-v3 model. We recommend using this model because of the following reasons:
+- The translation accuracy of the Whisper large-v3 model for different languages is much higher.
+- It has a lower Word Error Rate (WER) for various languages.
+- It has improved continuous numbers transcription compared to other models. 
 
 #### Switch to different model
-If you want to switch to a different model you need to run the src.main with the following args
+
+If you want to switch to a different model, you need to run `src.main` with the following arguments:
+
 ```bash
 python3 -m src.main --asr-args '{"model_size": "large"}'
 ```
