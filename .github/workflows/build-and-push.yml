@@ -37,7 +37,7 @@ jobs:
         uses: crazy-max/ghaction-github-runtime@v3
       - name: Build cache
         run: |
-          docker buildx build -f src/Dockerfile.base . --cache-from type=gha --cache-to type=gha,mode=max 
+          docker buildx build -f Dockerfile.base . --cache-from type=gha --cache-to type=gha,mode=max 
 
   build-and-push-image:
     needs: generate-job-strategy-matrix
