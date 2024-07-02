@@ -2,7 +2,7 @@
   "models": [
     {
       "serviceName": "florence_ocr",
-      "modelBasePath": "OCR/src/florance_ocr/.",
+      "modelBasePath": "OCR/florance_ocr/.",
       "apiBasePath": "florance_ocr/",
       "containerPort": 8000,
        "environment": {
