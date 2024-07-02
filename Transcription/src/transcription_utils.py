@@ -2,6 +2,13 @@ import os
 from pydub import AudioSegment
 import glob
 
+def create_directories():
+    project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    original_text_files_dir = os.path.join(project_dir, 'original_text_files')
+    modified_text_files_dir = os.path.join(project_dir, 'modified_text_files')
+
+    os.makedirs(original_text_files_dir, exist_ok=True)
+    os.makedirs(modified_text_files_dir, exist_ok=True)
 
 def append_transcription(room_id, text):
     file_name = f"{room_id}_original.txt"
