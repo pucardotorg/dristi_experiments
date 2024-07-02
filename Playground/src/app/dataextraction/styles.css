@@ -1,0 +1,106 @@
+/* styles.css */
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;  
+  background-color: #f0f0f0; 
+}
+
+.title {
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-align: center;  
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  
+  justify-content: flex-start;  
+  background-color: rgba(255, 255, 255, 0.8);  
+  border: 2px solid black;  
+  padding: 20px;
+  border-radius: 15px;
+  width: 80vw;  
+  height: 80vh;  
+  max-width: 800px; 
+  max-height: 730px;  
+  overflow: auto;
+}
+
+.fileInputLabelContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  
+  margin-top: 16px;
+}
+
+.fileInputLabel {
+  font-size: 12px;
+  cursor: pointer;
+  padding: 10px 10px;
+  border-radius: 5px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.uploadedImage {
+  max-width: 100%;
+  max-height: 300px;
+  margin-top: 16px;
+  border-radius: 15px; 
+}
+
+.result {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.submitButton {
+  margin-top: 16px;
+  border-radius: 5px;
+  padding: 8px 16px;
+  font-size: 16px;
+}
+
+.inputLabelHover:hover {
+  color: #1976d2;
+  cursor: pointer;
+}
+
+.goBackBtn {
+  padding: 12px 24px;
+  margin-top: 8px;
+  font-size: 14px;
+  border-radius: 5px;
+  background-color: #f44336;
+  color: #fff;
+  cursor: pointer;
+}
+
+.submitFeedbackButton {
+  padding: 12px 24px;
+  margin-top: 8px;
+  font-size: 14px;
+  border-radius: 5px;
+  background-color: #1976d2;
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .form {
+    width: 90vw;  
+    max-width: unset;  
+    height: auto; 
+    max-height: unset;  
+  }
+
+  .result {
+    text-align: left;
+  }
+}
