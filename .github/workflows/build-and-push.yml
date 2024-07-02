@@ -1,0 +1,97 @@
+name: Build and Push (Parallel)
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      service_names:
+        description: 'Space-separated service names images to build. Leave empty for all images.'
+        required: false
+        default: ""
+
+env:
+  REGISTRY: ghcr.io
+  DOCKER_IMAGE_TAG: ${{ github.ref_name }}
+    
+jobs:
+  generate-job-strategy-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      job-strategy-matrix: ${{ steps.generate.outputs.job-strategy-matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - id: generate
+        run: |
+          JOB_STRATEGY_MATRIX=$(jq -nc --arg arr "${{inputs.service_names}}"  \
+          '$arr | split(" ") | if length == 0 then [inputs.models[].serviceName] else . end' ./config.json) 
+          echo $JOB_STRATEGY_MATRIX #todo
+          echo "job-strategy-matrix=$JOB_STRATEGY_MATRIX" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+      - name: Build cache
+        run: |
+          docker buildx build -f src/Dockerfile.base . --cache-from type=gha --cache-to type=gha,mode=max 
+
+  build-and-push-image:
+    needs: generate-job-strategy-matrix
+    runs-on: ubuntu-latest
+    name: Build and push ${{matrix.service_name}}
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 60 # 1 hour timeout
+    strategy:
+      matrix:
+        service_name: ${{ fromJson(needs.generate-job-strategy-matrix.outputs.job-strategy-matrix) }}
+      max-parallel: 50
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Log in to the Container registry
+        id: login
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.PAT }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      -
+        name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{matrix.service_name}}
+          tags: |
+            # minimal
+            type=match,pattern=v(.*),group=1,value=${{ github.ref_name }},enable=${{ github.event_name == 'release' }}
+            # branch event
+            type=ref,event=branch
+          flavor: |
+            latest=false
+
+      - name: Build and push docker images
+        run: |
+          image=$(jq -r --arg sn "${{matrix.service_name}}" '.models[] | select(.serviceName == $sn) | .serviceName' ./config.json)
+          path=$(jq -r --arg sn "${{matrix.service_name}}" '.models[] | select(.serviceName == $sn) | .modelBasePath' ./config.json)
+          (cat Dockerfile.base ; echo ;cat "./$path/Dockerfile") | docker buildx build $(echo "$DOCKER_METADATA_OUTPUT_TAGS" | awk '{printf "-t %s ", $0}') -f - "./$path" --cache-from type=gha --cache-to type=gha,mode=max --push
+
+          
+        
+            
+          
