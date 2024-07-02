@@ -1,14 +1,15 @@
 import os
+from threading import Thread
+from queue import Queue
+import asyncio
+
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-import asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
-from threading import Thread
-from queue import Queue
 
 load_dotenv()
 intents = discord.Intents.default()
@@ -69,4 +70,8 @@ def run_api():
 if __name__ == "__main__":
     bot_thread = Thread(target=run_bot)
     bot_thread.start()
-    run_api()
+    try:
+        run_api()
+    except KeyboardInterrupt:
+        logging.info("Shutting down...")
+        bot_thread.join()
