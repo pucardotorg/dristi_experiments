@@ -426,8 +426,10 @@ const Transcription = () => {
               ref={roomIdInputRef}
               placeholder="Room Id"
             />
+ 
             <button onClick={joinRoom} disabled={webSocketStatus !== 'Connected'}>Join Room</button>
             <button onClick={createRoom}disabled={webSocketStatus !== 'Connected'} >Create Room</button>
+ 
           </div>
         </div>
       ) : (
