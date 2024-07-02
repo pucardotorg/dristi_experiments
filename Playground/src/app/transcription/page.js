@@ -1,8 +1,12 @@
-'use client'
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './styles.css';
-import { Select, MenuItem, FormControl, InputLabel, Icon } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';  
+import { Select, MenuItem, FormControl, InputLabel, Icon, Button,    Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextareaAutosize } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const Transcription = () => {
   const [websocket, setWebsocket] = useState(null);
@@ -11,7 +15,6 @@ const Transcription = () => {
   const [globalStream, setGlobalStream] = useState(null);
   const [clientId, setClientId] = useState(null);
   const [roomId, setRoomId] = useState(null);
-  // const [isRecording, setIsRecording] = useState(false);
   const [sendOriginal, setSendOriginal] = useState('');
   const [currentPosition, setCurrentPosition] = useState(0);
   const [webSocketStatus, setWebSocketStatus] = useState('Not Connected');
@@ -22,7 +25,9 @@ const Transcription = () => {
   const [showLoginPanel, setShowLoginPanel] = useState(true);
   const [transcriptionUrl, setTranscriptionUrl] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
-
+  const [isRecording, setIsRecording] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [comment, setComment] = useState('');
   const websocketAddressRef = useRef(null);
   const languageSelectRef = useRef(null);
   const inputSourceRef = useRef(null);
@@ -30,7 +35,6 @@ const Transcription = () => {
   const roomIdInputRef = useRef(null);
   const startTimeRef = useRef([0, 0, 0]);
   const endTimeRef = useRef([0, 0, 0]);
-  let isRecording = false;
 
   const bufferSize = 4096;
 
@@ -39,31 +43,40 @@ const Transcription = () => {
   }, []);
 
   const initWebSocket = (offset = 'config') => {
-    const websocketAddress = offset === 'config' 
-      ? websocketAddressRef.current?.value 
-      : document.getElementById('websocketAddress-login').value;
+    const websocketAddress =
+      offset === 'config'
+        ? websocketAddressRef.current?.value
+        : document.getElementById('websocketAddress-login').value;
 
     if (!websocketAddress) {
-      console.log("WebSocket address is required.");
+      console.log('WebSocket address is required.');
       return;
     }
 
     const ws = new WebSocket(websocketAddress);
 
     ws.onopen = () => {
-      console.log("WebSocket connection established");
+      console.log('WebSocket connection established');
       setWebSocketStatus('Connected');
+      window.alert('WebSocket connection successful');
+    
+      
     };
 
     ws.onclose = (event) => {
-      console.log("WebSocket connection closed", event);
+      console.log('WebSocket connection closed', event);
       setWebSocketStatus('Not Connected');
+      window.alert('WebSocket connection not successful');
+ 
     };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log(data);
-      if (data.type === 'joined_room' || data.type === 'refresh_transcription') {
+      if (
+        data.type === 'joined_room' ||
+        data.type === 'refresh_transcription'
+      ) {
         handleRoomJoined(data);
       } else {
         updateTranscription(data);
@@ -85,80 +98,73 @@ const Transcription = () => {
 
   const updateTranscription = (transcriptData) => {
     if (transcriptData.words && transcriptData.words.length > 0) {
-      const newTranscription = transcriptData.words.map(wordData => {
-        const probability = wordData.probability;
-        let color = 'black';
-        if (probability > 0.9) color = 'green';
-        else if (probability > 0.6) color = 'orange';
-        else color = 'red';
-        return `<span style="color: ${color}">${wordData.word} </span>`;
-      }).join('');
-      setTranscription(prev => prev + newTranscription + '<br>');
+      const newTranscription = transcriptData.words
+        .map((wordData) => {
+          const probability = wordData.probability;
+          let color = 'black';
+          if (probability > 0.9) color = 'green';
+          else if (probability > 0.6) color = 'orange';
+          else color = 'red';
+          return `<span style="color: ${color}">${wordData.word} </span>`;
+        })
+        .join('');
+      setTranscription((prev) => prev + newTranscription + '<br>');
     } else {
-      setTranscription(prev => prev + transcriptData.text + ' ');
+      setTranscription((prev) => prev + transcriptData.text + ' ');
     }
-    setEditableTranscription(prev => prev + transcriptData.text + ' ');
-    setSendOriginal(prev => prev + transcriptData.text + '\n');
+    setEditableTranscription((prev) => prev + transcriptData.text + ' ');
+    setSendOriginal((prev) => prev + transcriptData.text + '\n');
 
     if (transcriptData.language && transcriptData.language_probability) {
-      setDetectedLanguage(`${transcriptData.language} (${transcriptData.language_probability.toFixed(2)})`);
+      setDetectedLanguage(
+        `${
+          transcriptData.language
+        } (${transcriptData.language_probability.toFixed(2)})`
+      );
     }
 
     if (transcriptData.processing_time) {
-      setProcessingTime(`Processing time: ${transcriptData.processing_time.toFixed(2)} seconds`);
+      setProcessingTime(
+        `Processing time: ${transcriptData.processing_time.toFixed(2)} seconds`
+      );
     }
   };
 
-
   const startRecording = () => {
     if (isRecording) return;
-    isRecording = true;
 
-    const inputSource = document.querySelector('input[name="inputSource"]:checked').value;
+    setIsRecording(true);
+
+    const inputSource = document.querySelector(
+      'input[name="inputSource"]:checked'
+    ).value;
 
     if (inputSource === 'mic') {
-        startMicRecording();
+      startMicRecording();
     } else {
-        startFileRecording();
+      startFileRecording();
     }
-};
+  };
 
-  // const startRecording = () => {
-  //   if (!websocket || websocket.readyState !== WebSocket.OPEN) {
-  //     console.error("WebSocket is not connected. Please connect first.");
-  //     return;
-  //   }
-
-  //   if (isRecording) return;
-  //   setIsRecording(true);
-
-  //   const inputSource = inputSourceRef.current.value;
-
-  //   if (inputSource === 'mic') {
-  //     startMicRecording();
-  //   } else {
-  //     startFileRecording();
-  //   }
-  // };
-
-
-  
   const startMicRecording = () => {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const newContext = new AudioContext();
     setContext(newContext);
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      setGlobalStream(stream);
-      const input = newContext.createMediaStreamSource(stream);
-      const newProcessor = newContext.createScriptProcessor(bufferSize, 1, 1);
-      newProcessor.onaudioprocess = processAudio;
-      input.connect(newProcessor);
-      newProcessor.connect(newContext.destination);
-      setProcessor(newProcessor);
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        setGlobalStream(stream);
+        const input = newContext.createMediaStreamSource(stream);
+        const newProcessor = newContext.createScriptProcessor(bufferSize, 1, 1);
+        newProcessor.onaudioprocess = (e) => processAudio(e, newContext);
+        input.connect(newProcessor);
+        newProcessor.connect(newContext.destination);
+        setProcessor(newProcessor);
 
-      sendAudioConfig();
-    }).catch(error => console.error('Error accessing microphone', error));
+        sendAudioConfig();
+      })
+      .catch((error) => console.error('Error accessing microphone', error));
   };
 
   const startFileRecording = () => {
@@ -181,31 +187,37 @@ const Transcription = () => {
     const newContext = new AudioContext();
     setContext(newContext);
 
-    newContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
-      const source = newContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(newContext.destination);
+    newContext.decodeAudioData(
+      arrayBuffer,
+      (audioBuffer) => {
+        const source = newContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(newContext.destination);
 
-      const newProcessor = newContext.createScriptProcessor(bufferSize, 1, 1);
-      newProcessor.onaudioprocess = (e) => processAudio(e, source);
-      source.connect(newProcessor);
-      newProcessor.connect(newContext.destination);
+        const newProcessor = newContext.createScriptProcessor(bufferSize, 1, 1);
+        newProcessor.onaudioprocess = (e) => processAudio(e, newContext);
+        source.connect(newProcessor);
+        newProcessor.connect(newContext.destination);
 
-      source.start(0, currentPosition);
-      setProcessor(newProcessor);
+        source.start(0, currentPosition);
+        setProcessor(newProcessor);
 
-      sendAudioConfig();
-    }, (error) => {
-      console.error('Error decoding audio data:', error);
-    });
+        sendAudioConfig();
+      },
+      (error) => {
+        console.error('Error decoding audio data:', error);
+      }
+    );
   };
 
   const stopRecording = () => {
     if (!isRecording) return;
+
     setIsRecording(false);
 
     if (globalStream) {
-      globalStream.getTracks().forEach(track => track.stop());
+      globalStream.getTracks().forEach((track) => track.stop());
+      setGlobalStream(null);
     }
     if (processor) {
       setCurrentPosition(context.currentTime);
@@ -220,7 +232,7 @@ const Transcription = () => {
   };
 
   const sendAudioConfig = () => {
-    if(!newContext){
+    if (!context) {
       console.error('Audio context is not initialized');
       return;
     }
@@ -232,28 +244,35 @@ const Transcription = () => {
         sampleRate: context.sampleRate,
         bufferSize: bufferSize,
         channels: 1,
-        language: languageSelectRef.current.value !== 'multilingual' ? languageSelectRef.current.value : null,
+        language:
+          languageSelectRef.current.value !== 'multilingual'
+            ? languageSelectRef.current.value
+            : null,
         processing_strategy: 'silence_at_end_of_chunk',
         processing_args: {
           chunk_length_seconds: 1,
-          chunk_offset_seconds: 0.1
-        }
-      }
+          chunk_offset_seconds: 0.1,
+        },
+      },
     };
 
     websocket.send(JSON.stringify(audioConfig));
   };
 
-  const processAudio = (e, source) => {
-    if (!context){
+  const processAudio = (e, audioContext) => {
+    if (!audioContext) {
       console.error('Audio context is not initialized');
       return;
     }
-    const inputSampleRate = context.sampleRate;
+    const inputSampleRate = audioContext.sampleRate;
     const outputSampleRate = 16000;
 
     const left = e.inputBuffer.getChannelData(0);
-    const downsampledBuffer = downsampleBuffer(left, inputSampleRate, outputSampleRate);
+    const downsampledBuffer = downsampleBuffer(
+      left,
+      inputSampleRate,
+      outputSampleRate
+    );
     const audioData = convertFloat32ToInt16(downsampledBuffer);
     if (websocket && websocket.readyState === WebSocket.OPEN) {
       const audioBase64 = bufferToBase64(audioData);
@@ -278,8 +297,13 @@ const Transcription = () => {
     let offsetBuffer = 0;
     while (offsetResult < result.length) {
       const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
-      let accum = 0, count = 0;
-      for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+      let accum = 0,
+        count = 0;
+      for (
+        let i = offsetBuffer;
+        i < nextOffsetBuffer && i < buffer.length;
+        i++
+      ) {
         accum += buffer[i];
         count++;
       }
@@ -294,7 +318,7 @@ const Transcription = () => {
     const l = buffer.length;
     const buf = new Int16Array(l);
     for (let i = 0; i < l; i++) {
-      buf[i] = Math.min(1, buffer[i]) * 0x7FFF;
+      buf[i] = Math.min(1, buffer[i]) * 0x7fff;
     }
     return buf.buffer;
   };
@@ -333,102 +357,210 @@ const Transcription = () => {
         client_id: roomId,
         room_id: roomId,
         start_time: startTimeRef.current,
-        end_time: endTimeRef.current
+        end_time: endTimeRef.current,
       };
       websocket.send(JSON.stringify(message));
     }
   };
 
+
+    const handleFeedbackSubmit = () => {
+    setOpenModal(true);
+  };
+
+  const handleModalClose = () => {
+    setOpenModal(false);
+    setComment('');
+  };
+
+ 
+  const handleCommentChange = (event) => {
+    setComment(event.target.value);
+  };
+
+
+
+  const handleCommentSubmit = () => {
+    const data = {
+      category: 'transcription',
+      text: comment,
+    };
+
+    fetch(`${process.env.NEXT_PUBLIC_REPORT_ISSUE_API}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Success:', data);
+      handleModalClose();
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  };
+ 
+
+
   return (
     <div className="container">
-  {showLoginPanel ? (
-  <div className="loginPanel">
-  
-   <div className="formContainer">
-  <h1>Pucar Login</h1>
-  <label htmlFor="websocketAddress-login">WebSocket Address:</label>
-  <input type="text" id="websocketAddress-login" defaultValue="https://transcription.test.bhasai.samagra.io/" />
-  <button onClick={() => initWebSocket('login')}>Connect</button>
-  <label htmlFor="roomId">Room Id:</label>
-  <input type="text" id="roomId" ref={roomIdInputRef} placeholder="Room Id" />
-  <button onClick={joinRoom}>Join Room</button>
-  <button onClick={createRoom}>Create Room</button>
-</div>
-
-
-  </div>
+      {showLoginPanel ? (
+        <div className="loginPanel">
+          <div className="formContainer">
+            <h1>Pucar Login</h1>
+            <label htmlFor="websocketAddress-login">WebSocket Address:</label>
+            <input
+              type="text"
+              id="websocketAddress-login"
+           placeholder='WebSocket Address'
+              className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
+            />
+            <button onClick={() => initWebSocket('login')}>Connect</button>
+            <label htmlFor="roomId">Room Id:</label>
+            <input
+              type="text"
+              id="roomId"
+              ref={roomIdInputRef}
+              placeholder="Room Id"
+            />
+            <button onClick={joinRoom}>Join Room</button>
+            <button onClick={createRoom}>Create Room</button>
+          </div>
+        </div>
       ) : (
-         <div className="recordingPanel">
-  <div className="formContainer">
-    <h1>Transcription POC</h1>
-    <h3>Room Id - <span>{roomId}</span></h3>
-    <div className="controls">
-      <div className="controlGroup">
-        <label htmlFor="websocketAddress">WebSocket Address:</label>
-        <input type="text" ref={websocketAddressRef} defaultValue="https://transcription.test.bhasai.samagra.io/"  />
-      </div>
-       <div className="controlGroup">
-      <FormControl fullWidth variant="outlined"> 
-        <InputLabel id="languageSelectLabel">Language</InputLabel>
-        <Select
-          labelId="languageSelectLabel"
-          id="languageSelect"
-          ref={languageSelectRef}
-          defaultValue="multilingual"
-          label="Language"
-          IconComponent={ExpandMoreIcon}   
-        >
-          <MenuItem value="multilingual">Multilingual</MenuItem>
-          <MenuItem value="english">English</MenuItem>
-          <MenuItem value="hindi">Hindi</MenuItem>
-        </Select>
-      </FormControl>
-    </div>
-      <button onClick={() => initWebSocket()}>Connect</button>
-    </div>
-    <div className="inputSourceContainer">
-      <label>Input Source:</label>
-      <input type="radio" id="micInput" name="inputSource" value="mic" defaultChecked ref={inputSourceRef} />
-      <label htmlFor="micInput">Microphone</label>
-      <input type="radio" id="fileInput" name="inputSource" value="file" ref={inputSourceRef} />
-      <label htmlFor="fileInput">File</label>
-    </div>
-    <input type="file" ref={audioFileRef} accept="audio/*" />
-    <div className="streamingButtons">
-      <button onClick={startRecording}>Start Streaming</button>
-      <button onClick={stopRecording}>Stop Streaming</button>
-      <button onClick={updateOriginalTranscriptionServer}>Save Transcription</button>
-    </div>
+        <div className="recordingPanel">
+          <div className="formContainer">
+            <h1>Transcription POC</h1>
+            <h3>
+              Room Id - <span>{roomId}</span>
+            </h3>
+            <div className="controls">
+              <div className="controlGroup">
+                <label htmlFor="websocketAddress">WebSocket Address:</label>
+                <input
+                  type="text"
+                  ref={websocketAddressRef}
+                  defaultValue="https://transcription.test.bhasai.samagra.io/"
+                  className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
+                />
+              </div>
+              <div className="controlGroup">
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="languageSelectLabel">Language</InputLabel>
+                  <Select
+                    labelId="languageSelectLabel"
+                    id="languageSelect"
+                    ref={languageSelectRef}
+                    defaultValue="multilingual"
+                    label="Language"
+                    IconComponent={ExpandMoreIcon}>
+                    <MenuItem value="multilingual">Multilingual</MenuItem>
+                    <MenuItem value="english">English</MenuItem>
+                    <MenuItem value="hindi">Hindi</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+              <button onClick={() => initWebSocket()}>Connect</button>
+            </div>
+            <div className="inputSourceContainer">
+              <label>Input Source:</label>
+              <input
+                type="radio"
+                id="micInput"
+                name="inputSource"
+                value="mic"
+                defaultChecked
+                ref={inputSourceRef}
+              />
+              <label htmlFor="micInput">Microphone</label>
+              <input
+                type="radio"
+                id="fileInput"
+                name="inputSource"
+                value="file"
+                ref={inputSourceRef}
+              />
+              <label htmlFor="fileInput">File</label>
+            </div>
+            <input type="file" ref={audioFileRef} accept="audio/*" />
+            <div className="streamingButtons">
+              <button onClick={startRecording} disabled={isRecording}>Start Streaming</button>
+              <button onClick={stopRecording} disabled={!isRecording}>Stop Streaming</button>
+              <button onClick={updateOriginalTranscriptionServer}   disabled={isRecording || !editableTranscription.trim()} >
+                Save Transcription
+              </button>
+            </div>
 
-    {transcriptionUrl && audioUrl && (
-      <div className="artifactDownloadPanel">
-        <a href={transcriptionUrl} target="_blank" rel="noopener noreferrer">
-          <button className="downloadButton">
-            <i className="fa fa-download"></i>
-            <span>Download Transcription</span>
-          </button>
-        </a>
-        <a href={audioUrl} target="_blank" rel="noopener noreferrer">
-          <button className="downloadButton">
-            <i className="fa fa-download"></i>
-            <span>Download Audio</span>
-          </button>
-        </a>
-      </div>
-    )}
+            {transcriptionUrl && audioUrl && (
+              <div className="artifactDownloadPanel">
+                <a
+                  href={transcriptionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <button className="downloadButton">
+                    <i className="fa fa-download"></i>
+                    <span>Download Transcription</span>
+                  </button>
+                </a>
+                <a href={audioUrl} target="_blank" rel="noopener noreferrer">
+                  <button className="downloadButton" disabled={!audioUrl}>
+                    <i className="fa fa-download"></i>
+                    <span>Download Audio</span>
+                  </button>
+                </a>
+              </div>
+            )}
 
-    <div className="transcription" dangerouslySetInnerHTML={{ __html: transcription }}></div>
-    <textarea
-      className="editableTranscription"
-      value={editableTranscription}
-      onChange={(e) => setEditableTranscription(e.target.value)}
-    ></textarea>
-    <div>WebSocket: <span>{webSocketStatus}</span></div>
-    <div>Detected Language: <span>{detectedLanguage}</span></div>
-    <div>Last Processing Time: <span>{processingTime}</span></div>
-  </div>
-</div>
-
+            <div
+              className="transcription"
+              dangerouslySetInnerHTML={{ __html: transcription }}></div>
+            <textarea
+              className="editableTranscription"
+              value={editableTranscription}
+              onChange={(e) =>
+                setEditableTranscription(e.target.value)
+              }></textarea>
+            <div>
+              WebSocket: <span>{webSocketStatus}</span>
+            </div>
+            <div>
+              Detected Language: <span>{detectedLanguage}</span>
+            </div>
+            <div>
+              Last Processing Time: <span>{processingTime}</span>
+            </div>
+            <br></br>
+             <div className="buttonContainer" style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+            
+              <Button  onClick={handleFeedbackSubmit} className="submitFeedbackButton">Report Issue</Button>
+              <Dialog open ={openModal} onClose={handleModalClose}>
+                <DialogTitle>Feedback</DialogTitle>
+            <DialogContent>
+              <TextareaAutosize
+                minRows={4}
+                placeholder="Enter your comments here"
+                value={comment}
+                onChange={handleCommentChange}
+                style={{ width: '100%' }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleModalClose} color="primary">
+                Cancel
+              </Button>
+              <Button onClick={handleCommentSubmit} color="primary">
+                Submit
+              </Button>
+            </DialogActions>
+              </Dialog>
+            </div>
+          </div>
+          </div>
+        </div>
       )}
     </div>
   );

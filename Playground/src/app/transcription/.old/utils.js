@@ -195,15 +195,17 @@ function startRecording() {
 }
 function startMicRecording() {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    context = new AudioContext();
+    const newContext = new AudioContext();
+    setContext(newContext);
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         globalStream = stream;
         const input = context.createMediaStreamSource(stream);
-        processor = context.createScriptProcessor(bufferSize, 1, 1);
-        processor.onaudioprocess = e => processAudio(e);
+        const processor = context.createScriptProcessor(bufferSize, 1, 1);
+        processor.onaudioprocess = e => processAudio(e,newContext);
         input.connect(processor);
         processor.connect(context.destination);
+        setProcessor(newProcessor);
 
         sendAudioConfig();
     }).catch(error => console.error('Error accessing microphone', error));
@@ -214,21 +216,23 @@ function startMicRecording() {
 }
 function createAudioPipeline(arrayBuffer) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    context = new AudioContext();
+    const newContext = new AudioContext();
+    setContext(newContext);
 
-    context.decodeAudioData(arrayBuffer, (audioBuffer) => {
-        const source = context.createBufferSource();
+    newContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+        const source = newContext.createBufferSource();
         source.buffer = audioBuffer;
-        source.connect(context.destination); // Connect to the destination to play the audio
+        source.connect(newContext.destination); // Connect to the destination to play the audio
 
         // Create the ScriptProcessorNode and connect it to the source
-        processor = context.createScriptProcessor(bufferSize, 1, 1);
-        processor.onaudioprocess = e => processAudio(e, source);
-        source.connect(processor);
-        processor.connect(context.destination);
+        const newProcessor = newContext.createScriptProcessor(bufferSize, 1, 1);
+        newProcessor.onaudioprocess = e => processAudio(e, newContext, source);
+        source.connect(newProcessor);
+        newProcessor.connect(newContext.destination);
 
         // Start playing the audio from the current position
         source.start(0, currentPosition);
+        setProcessor(newProcessor);
 
         sendAudioConfig();
     }, (error) => {
@@ -334,7 +338,7 @@ function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
     return result;
 }
 
-function processAudio(e, source) {
+function processAudio(e,context,source) {
     const inputSampleRate = context.sampleRate;
     const outputSampleRate = 16000; // Target sample rate
 
