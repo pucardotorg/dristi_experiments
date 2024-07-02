@@ -11,7 +11,7 @@ from src.room import Room
 import base64
 import numpy as np
 from src.database import Database
-from src.transcription_utils import read_transcription, append_transcription, update_transcription_file, merge
+from src.transcription_utils import read_transcription, append_transcription, update_transcription_file, merge, create_directories
 import torch
 
 class Server:
@@ -44,6 +44,7 @@ class Server:
         self.keyfile = keyfile
         self.rooms = {}  # Dictionary to manage rooms
         self.db = Database()
+        create_directories()
 
     async def handle_audio(self, websocket):
         while True:
