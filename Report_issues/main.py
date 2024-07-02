@@ -62,7 +62,10 @@ async def submit_issue(issue: Issue):
     return {"message": f"{issue.category.capitalize()} issue queued successfully!"}
 
 def run_bot():
-    bot.run(os.getenv('TOKEN'))
+    token = os.getenv('TOKEN')
+    if not token:
+        raise ValueError("Discord bot token not found in environment variables.")
+    bot.run(token)
 
 def run_api():
     uvicorn.run(app, host="0.0.0.0", port=8002)
