@@ -6,13 +6,14 @@ from Levenshtein import distance as levenshtein_distance
 from unittest.mock import patch
 from transformers.dynamic_module_utils import get_imports
 from transformers import AutoModelForCausalLM, AutoProcessor
+from typing import Union
 
 class Model:
     def __init__(self, context):
         self.context = context
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    def fixed_get_imports(self, filename: str | os.PathLike) -> list[str]:
+    def fixed_get_imports(self, filename: Union[str, os.PathLike]) -> list[str]:
         if not str(filename).endswith("modeling_florence2.py"):
             return get_imports(filename)
         imports = get_imports(filename)
