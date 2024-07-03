@@ -15,7 +15,7 @@ env:
     
 jobs:
   generate-job-strategy-matrix:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       job-strategy-matrix: ${{ steps.generate.outputs.job-strategy-matrix }}
     steps:
@@ -41,7 +41,7 @@ jobs:
 
   build-and-push-image:
     needs: generate-job-strategy-matrix
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Build and push ${{matrix.service_name}}
     permissions:
       contents: read
