@@ -1,0 +1,6 @@
+aiohttp==3.9.5
+quart
+numpy==1.26.4
+opencv-python-headless==4.10.0.82
+joblib==1.4.2
+scikit-learn==1.2.2
