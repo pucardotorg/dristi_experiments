@@ -66,12 +66,13 @@ export default function DataExtraction() {
   const handleSubmit = () => {
     setLoading(true);
 
-    const valuesArray = inputValues.split(',').map(value => value.trim());
+      const valuesString = Array.isArray(inputValues) ? inputValues.join(',') : inputValues;
+  const valuesArray = valuesString ? valuesString.split(',').map(value => value.trim()) : [];
 
     if (uploadedImage) {
       const formData = new FormData();
       formData.append('file', uploadedImage);
-      formData.append('word_check_list', JSON.stringify([...valuesArray, selectedOption]));
+      formData.append('word_check_list', JSON.stringify(valuesArray));
       formData.append('fuzz_match', false);
       formData.append('match_case', false);
       formData.append('distance_cutoff', 1);
