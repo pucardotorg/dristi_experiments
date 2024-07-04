@@ -415,7 +415,7 @@ const Transcription = () => {
             <input
               type="text"
               id="websocketAddress-login"
-           placeholder='WebSocket Address'
+            defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
               className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
             />
             <button onClick={() => initWebSocket('login')}>Connect</button>
@@ -445,7 +445,7 @@ const Transcription = () => {
                 <input
                   type="text"
                   ref={websocketAddressRef}
-                  defaultValue="https://transcription.test.bhasai.samagra.io/"
+                defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
                   className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
                 />
               </div>
