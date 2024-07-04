@@ -1,7 +1,7 @@
 import json
 
 class ModelRequest:
-    def __init__(self, image_file, word_check_list, doc_type='', distance_cutoff=0, extract_data=False):
+    def __init__(self, image_file, word_check_list, doc_type='', distance_cutoff=1, extract_data=False):
         self.image_file = image_file
         self.word_check_list = word_check_list
         self.distance_cutoff = distance_cutoff

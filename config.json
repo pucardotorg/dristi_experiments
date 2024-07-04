@@ -1,0 +1,42 @@
+{
+  "models": [
+
+    
+    {
+      "serviceName": "image_classifier",
+      "modelBasePath": "classifier/mobilenet_classifier/.",
+      "apiBasePath": "classifier/mobilenet_classifier/",
+      "containerPort": 8000,
+       "environment": {
+        "NVIDIA_VISIBLE_DEVICES": "${NVIDIA_VISIBLE_DEVICES}"
+      },
+      "nginx": [],
+      "constraints": ["node.labels.node_vm_type==gpu"],
+      "build": false
+    },    
+    {
+      "serviceName": "Transcription",
+      "modelBasePath": "Transcription/.",
+      "apiBasePath": "Transcription/",
+      "containerPort": 8000,
+       "environment": {
+        "NVIDIA_VISIBLE_DEVICES": "${NVIDIA_VISIBLE_DEVICES}"
+      },
+      "nginx": [],
+      "constraints": ["node.labels.node_vm_type==gpu"],
+      "build": false
+    },    
+    {
+      "serviceName": "florence_ocr",
+      "modelBasePath": "OCR/florence/.",
+      "apiBasePath": "florence/",
+      "containerPort": 8000,
+       "environment": {
+        "NVIDIA_VISIBLE_DEVICES": "${NVIDIA_VISIBLE_DEVICES}"
+      },
+      "nginx": [],
+      "constraints": ["node.labels.node_vm_type==gpu"],
+      "build": false
+    }
+  ]
+}
