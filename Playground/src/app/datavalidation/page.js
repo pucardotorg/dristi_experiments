@@ -79,7 +79,7 @@ export default function DataValidation() {
       formData.append('distance_cutoff', '1');
       formData.append('doc_type', selectedOption);
 
-       fetch(`${process.env.NEXT_PUBLIC_REPORT_ISSUE_API}`, {
+       fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}`, {
         method: 'POST',
         body: formData,
       })
