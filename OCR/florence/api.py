@@ -38,7 +38,7 @@ async def embed():
 
     form = await request.form
     word_check_list = ast.literal_eval(form.get('word_check_list', '[]'))
-    distance_cutoff = int(form.get('distance_cutoff', 1))
+    distance_cutoff = int(form.get('distance_cutoff', 0))
     doc_type = str(form.get('doc_type', ''))
     extract_data = form.get('extract_data', 'false').lower() == 'true'
 
