@@ -68,7 +68,7 @@ def run_bot():
     bot.run(token)
 
 def run_api():
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 if __name__ == "__main__":
     bot_thread = Thread(target=run_bot)
