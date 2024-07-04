@@ -49,16 +49,25 @@ class Model:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    def check_keywords(self, text, keywords, threshold=1):
+    def check_keywords(self, text, keywords, threshold):
         cleaned_text = text.lower()
+        words = cleaned_text.split()
+        results = {}
 
         for keyword in keywords:
-            if keyword in cleaned_text:
-                return True
-            for word in cleaned_text.split():
-                if levenshtein_distance(keyword, word) <= threshold:
-                    return True
-        return False
+            keyword_lower = keyword.lower()
+            keyword_split = keyword_lower.split() if ' ' in keyword_lower else [keyword_lower]
+            min_distances = []
+
+            for k in keyword_split:
+                min_distance = min(levenshtein_distance(k, word) for word in words)
+                min_distances.append(min_distance)
+                results[k] = 1 if min_distance <= threshold else 0
+
+            avg_dist = sum(min_distances) / len(min_distances)
+            results[keyword] = 1 if avg_dist <= threshold else 0
+
+        return results
     
     def extract_cheque_return_memo(self, text):
         cheque_amount = re.search(r'For Rs\.? ([\d,\.]+)|Amount[: ]\s*([\d,\.]+)', text)
@@ -119,7 +128,12 @@ class Model:
             elif doc_type == 'vakalatnama':
                 extracted_data = self.extract_vakalatnama(cleaned_text)
 
-        return {
-            "Contains Keywords": contains_keywords,
-            "Extracted Data": extracted_data if extract_data else None
-        }
+        if extract_data and extracted_data:
+            return {
+                "Contains Keywords": contains_keywords,
+                "Extracted Data": extracted_data
+            }
+        else:
+            return {
+                "Contains Keywords": contains_keywords
+            }
