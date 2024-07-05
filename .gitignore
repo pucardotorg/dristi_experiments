@@ -1,1 +1,4 @@
 node_modules
+.idea
+venv
+OCR/florence/__pycache__/

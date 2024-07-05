@@ -32,10 +32,10 @@ class Server:
         connected_clients (dict): A dictionary mapping client IDs to Client objects.
     """
 
-    def __init__(self, vad_pipeline, asr_pipeline, host='localhost', port=8765, sampling_rate=16000, samples_width=2,
+    def __init__(self, vad_pipeline, asr_pipeline_map, host='localhost', port=8765, sampling_rate=16000, samples_width=2,
                  certfile=None, keyfile=None):
         self.vad_pipeline = vad_pipeline
-        self.asr_pipeline = asr_pipeline
+        self.asr_pipeline_map = asr_pipeline_map
         self.host = host
         self.port = port
         self.sampling_rate = sampling_rate
@@ -58,7 +58,7 @@ class Server:
                     audio = self.decode_base64_to_int16(config.get('data'))
                     room.append_audio_data(audio)
                     # this is synchronous, any async operation is in BufferingStrategy
-                    room.process_audio(websocket, self.vad_pipeline, self.asr_pipeline)
+                    room.process_audio(websocket)
                 elif config.get('type') == 'config':
                     room.update_config(config['data'])
                 elif config.get('type') == 'join_room':
@@ -120,7 +120,7 @@ class Server:
 
     def join_room(self, room_id, websocket):
         if room_id not in self.rooms:
-            room = Room(room_id, self.sampling_rate, self.samples_width)
+            room = Room(room_id, self.asr_pipeline_map, self.vad_pipeline, self.sampling_rate, self.samples_width)
             self.db.add_session(room_id)
             append_transcription(room_id, '')
             self.rooms[room_id] = room

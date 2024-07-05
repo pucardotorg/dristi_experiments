@@ -1,6 +1,7 @@
 import os
 from pydub import AudioSegment
 import glob
+import shutil
 
 def create_directories():
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -91,3 +92,11 @@ def merge(client_id):
     save_merged_wav(merged_wav, output_path)
 
     print(f"Merged file saved as {output_path}")
+
+
+def save_audio_file(file_path):
+    identifier = file_path.split('/')[1].split('_')[0]
+    dest_folder_path = f"audio_uploads/{identifier}"
+    os.makedirs(dest_folder_path, exist_ok=True)
+    dest_file_path = os.path.join(dest_folder_path, os.path.basename(file_path))
+    shutil.copy2(file_path, dest_file_path)
