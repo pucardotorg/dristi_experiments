@@ -3,7 +3,7 @@ from faster_whisper import WhisperModel
 import shutil
 from .asr_interface import ASRInterface
 from src.audio_utils import save_audio_to_file
-
+from src.transcription_utils import save_audio_file
 language_codes = {
     "afrikaans": "af",
     "amharic": "am",
@@ -123,12 +123,9 @@ class FasterWhisperASR(ASRInterface):
                                                       task="translate", beam_size=1)
 
         segments = list(segments)  # The transcription will actually run here.
-        identifier = file_path.split('/')[1].split('_')[0]
-        dest_folder_path = f"audio_uploads/{identifier}"
-        os.makedirs(dest_folder_path, exist_ok=True)
-        dest_file_path = os.path.join(dest_folder_path, os.path.basename(file_path))
-        shutil.copy2(file_path, dest_file_path)
-        # print(file_path)
+
+        save_audio_file(file_path)
+
         os.remove(file_path)
         flattened_words = [word for segment in segments for word in segment.words]
         # print(f"Transcription: {flattened_words}")

@@ -29,10 +29,16 @@ def main():
         print(f"Error parsing JSON arguments: {e}")
         return
 
-    vad_pipeline = VADFactory.create_vad_pipeline(args.vad_type, **vad_args)
-    asr_pipeline = ASRFactory.create_asr_pipeline(args.asr_type, **asr_args)
+    asr_pipeline_map = {
+        "faster_whisper": ASRFactory.create_asr_pipeline("faster_whisper", **asr_args),
+        "whisper": ASRFactory.create_asr_pipeline("whisper", **asr_args),
+        "bhashini": ASRFactory.create_asr_pipeline("bhashini", **asr_args),
+    }
 
-    server = Server(vad_pipeline, asr_pipeline, host=args.host, port=args.port, sampling_rate=16000, samples_width=2, certfile=args.certfile, keyfile=args.keyfile)
+    vad_pipeline = VADFactory.create_vad_pipeline(args.vad_type, **vad_args)
+    # asr_pipeline = ASRFactory.create_asr_pipeline(args.asr_type, **asr_args)
+
+    server = Server(vad_pipeline, asr_pipeline_map, host=args.host, port=args.port, sampling_rate=16000, samples_width=2, certfile=args.certfile, keyfile=args.keyfile)
 
     asyncio.get_event_loop().run_until_complete(server.start())
     asyncio.get_event_loop().run_forever()

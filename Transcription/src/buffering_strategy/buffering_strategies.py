@@ -60,8 +60,9 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
         chunk_length_in_bytes = self.chunk_length_seconds * self.client.sampling_rate * self.client.samples_width
         if len(self.client.buffer) > chunk_length_in_bytes:
             if self.processing_flag:
-                exit(
+                print(
                     "Error in realtime processing: tried processing a new chunk while the previous one was still being processed")
+                return
 
             self.client.scratch_buffer += self.client.buffer
             self.client.buffer.clear()
@@ -82,30 +83,32 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
             vad_pipeline: The voice activity detection pipeline.
             asr_pipeline: The automatic speech recognition pipeline.
         """
-        start = time.time()
-        vad_results = await vad_pipeline.detect_activity(self.client)
+        try:
+            start = time.time()
+            vad_results = await vad_pipeline.detect_activity(self.client)
 
-        if len(vad_results) == 0:
-            self.client.scratch_buffer.clear()
-            self.client.buffer.clear()
-            self.processing_flag = False
-            return
+            if len(vad_results) == 0:
+                self.client.scratch_buffer.clear()
+                self.client.buffer.clear()
+                self.processing_flag = False
+                return
 
-        last_segment_should_end_before = ((len(self.client.scratch_buffer) / (
-                    self.client.sampling_rate * self.client.samples_width)) - self.chunk_offset_seconds)
-        if vad_results[-1]['end'] < last_segment_should_end_before:
-            transcription = await asr_pipeline.transcribe(self.client)
-            if transcription['text'] != '':
-                end = time.time()
-                transcription['processing_time'] = end - start
-                json_transcription = json.dumps(transcription)
-                append_transcription(room_id, transcription['text'])
-                for client_id, client in connected_clients.items():
-                    await client.websocket.send(json_transcription)
+            last_segment_should_end_before = ((len(self.client.scratch_buffer) / (
+                        self.client.sampling_rate * self.client.samples_width)) - self.chunk_offset_seconds)
+            if vad_results[-1]['end'] < last_segment_should_end_before:
+                transcription = await asr_pipeline.transcribe(self.client)
+                if transcription['text'] != '':
+                    end = time.time()
+                    transcription['processing_time'] = end - start
+                    json_transcription = json.dumps(transcription)
+                    append_transcription(room_id, transcription['text'])
+                    for _, client in connected_clients.items():
+                        await client.websocket.send(json_transcription)
+                    self.client.scratch_buffer.clear()
+                    self.client.increment_file_counter()
+                    # await websocket.send(json_transcription)
                 self.client.scratch_buffer.clear()
                 self.client.increment_file_counter()
-                # await websocket.send(json_transcription)
-            self.client.scratch_buffer.clear()
-            self.client.increment_file_counter()
-        self.processing_flag = False
-        return ''
+            return ''
+        finally:
+            self.processing_flag = False

@@ -20,6 +20,8 @@ const Transcription = () => {
   const [webSocketStatus, setWebSocketStatus] = useState('Not Connected');
   const [detectedLanguage, setDetectedLanguage] = useState('Undefined');
   const [processingTime, setProcessingTime] = useState('Undefined');
+  const [selectedLanguage, setSelectedLanguage] = useState('multilingual');
+  const [selectedAsrModel, setSelectedAsrModel] = useState('faster_whisper');
   const [transcription, setTranscription] = useState('');
   const [editableTranscription, setEditableTranscription] = useState('');
   const [showLoginPanel, setShowLoginPanel] = useState(true);
@@ -29,7 +31,6 @@ const Transcription = () => {
   const [openModal, setOpenModal] = useState(false);
   const [comment, setComment] = useState('');
   const websocketAddressRef = useRef(null);
-  const languageSelectRef = useRef(null);
   const inputSourceRef = useRef(null);
   const audioFileRef = useRef(null);
   const roomIdInputRef = useRef(null);
@@ -151,6 +152,7 @@ const Transcription = () => {
     const newContext = new AudioContext();
     setContext(newContext);
 
+    sendAudioConfig(newContext);
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
@@ -162,7 +164,6 @@ const Transcription = () => {
         newProcessor.connect(newContext.destination);
         setProcessor(newProcessor);
 
-        sendAudioConfig();
       })
       .catch((error) => console.error('Error accessing microphone', error));
   };
@@ -187,6 +188,7 @@ const Transcription = () => {
     const newContext = new AudioContext();
     setContext(newContext);
 
+    sendAudioConfig(newContext);
     newContext.decodeAudioData(
       arrayBuffer,
       (audioBuffer) => {
@@ -201,8 +203,6 @@ const Transcription = () => {
 
         source.start(0, currentPosition);
         setProcessor(newProcessor);
-
-        sendAudioConfig();
       },
       (error) => {
         console.error('Error decoding audio data:', error);
@@ -231,7 +231,7 @@ const Transcription = () => {
     endTimeRef.current = [now.getHours(), now.getMinutes(), now.getSeconds()];
   };
 
-  const sendAudioConfig = () => {
+  const sendAudioConfig = (context) => {
     if (!context) {
       console.error('Audio context is not initialized');
       return;
@@ -245,9 +245,10 @@ const Transcription = () => {
         bufferSize: bufferSize,
         channels: 1,
         language:
-          languageSelectRef.current.value !== 'multilingual'
-            ? languageSelectRef.current.value
+          selectedLanguage !== 'multilingual'
+            ? selectedLanguage
             : null,
+        asr_model: selectedAsrModel,
         processing_strategy: 'silence_at_end_of_chunk',
         processing_args: {
           chunk_length_seconds: 1,
@@ -416,6 +417,7 @@ const Transcription = () => {
               type="text"
               id="websocketAddress-login"
            placeholder='WebSocket Address'
+           defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
               className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
             />
             <button onClick={() => initWebSocket('login')}>Connect</button>
@@ -426,10 +428,10 @@ const Transcription = () => {
               ref={roomIdInputRef}
               placeholder="Room Id"
             />
- 
+
             <button onClick={joinRoom} disabled={webSocketStatus !== 'Connected'}>Join Room</button>
             <button onClick={createRoom}disabled={webSocketStatus !== 'Connected'} >Create Room</button>
- 
+
           </div>
         </div>
       ) : (
@@ -445,26 +447,45 @@ const Transcription = () => {
                 <input
                   type="text"
                   ref={websocketAddressRef}
-                  defaultValue="https://transcription.test.bhasai.samagra.io/"
+                  defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
                   className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
                 />
               </div>
               <div className="controlGroup">
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="languageSelectLabel">Language</InputLabel>
-                  <Select
-                    labelId="languageSelectLabel"
-                    id="languageSelect"
-                    ref={languageSelectRef}
-                    defaultValue="multilingual"
-                    label="Language"
-                    IconComponent={ExpandMoreIcon}>
-                    <MenuItem value="multilingual">Multilingual</MenuItem>
-                    <MenuItem value="english">English</MenuItem>
-                    <MenuItem value="hindi">Hindi</MenuItem>
-                  </Select>
-                </FormControl>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="languageSelectLabel">Language</InputLabel>
+                    <Select
+                      labelId="languageSelectLabel"
+                      id="languageSelect"
+                      value={selectedLanguage}
+                      onChange={(e) => setSelectedLanguage(e.target.value)}
+                      label="Language"
+                      IconComponent={ExpandMoreIcon}
+                    >
+                      <MenuItem value="multilingual">Multilingual</MenuItem>
+                      <MenuItem value="english">English</MenuItem>
+                      <MenuItem value="hindi">Hindi</MenuItem>
+                    </Select>
+                  </FormControl>
               </div>
+                <div className="controlGroup">
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="asrModelInput">Transcription Model</InputLabel>
+                    <Select
+                      labelId="asrModelInput"
+                      id="asrModelSelect"
+                      value={selectedAsrModel}
+                      onChange={(e) => setSelectedAsrModel(e.target.value)}
+                      label="ASR Model"
+                      IconComponent={ExpandMoreIcon}
+                    >
+                      <MenuItem value="faster_whisper">Faster-Whisper</MenuItem>
+                      <MenuItem value="bhashini">Bhashini</MenuItem>
+                      <MenuItem value="whisper">Whisper</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+
               <button onClick={() => initWebSocket()}>Connect</button>
             </div>
             <div className="inputSourceContainer">
