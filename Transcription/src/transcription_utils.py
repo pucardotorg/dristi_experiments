@@ -2,6 +2,8 @@ import os
 from pydub import AudioSegment
 import glob
 import shutil
+import json
+import requests
 
 def create_directories():
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -100,3 +102,19 @@ def save_audio_file(file_path):
     os.makedirs(dest_folder_path, exist_ok=True)
     dest_file_path = os.path.join(dest_folder_path, os.path.basename(file_path))
     shutil.copy2(file_path, dest_file_path)
+
+def process_kenlm_transcription(asr_transcription):
+    kenlm_url = os.getenv('KENLM_URL')
+    payload = json.dumps({
+        "text": asr_transcription,
+        "BEAM_WIDTH": 5,
+        "SCORE_THRESHOLD": 1.5,
+        "max_distance": 1,
+        "lang": "eng"
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", kenlm_url, headers=headers, data=payload)
+    return response.text

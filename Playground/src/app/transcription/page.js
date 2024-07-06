@@ -20,6 +20,7 @@ const Transcription = () => {
   const [webSocketStatus, setWebSocketStatus] = useState('Not Connected');
   const [detectedLanguage, setDetectedLanguage] = useState('Undefined');
   const [processingTime, setProcessingTime] = useState('Undefined');
+  const [wordErrorRate, setWordErrorRate] = useState('0%');
   const [selectedLanguage, setSelectedLanguage] = useState('multilingual');
   const [selectedAsrModel, setSelectedAsrModel] = useState('faster_whisper');
   const [transcription, setTranscription] = useState('');
@@ -43,6 +44,13 @@ const Transcription = () => {
     initWebSocket();
   }, []);
 
+
+  useEffect(() => {
+    if (sendOriginal && editableTranscription) {
+      getWordErrorRate();
+    }
+  }, [sendOriginal, editableTranscription]);
+
   const initWebSocket = (offset = 'config') => {
     const websocketAddress =
       offset === 'config'
@@ -60,15 +68,15 @@ const Transcription = () => {
       console.log('WebSocket connection established');
       setWebSocketStatus('Connected');
       window.alert('WebSocket connection successful');
-    
-      
+
+
     };
 
     ws.onclose = (event) => {
       console.log('WebSocket connection closed', event);
       setWebSocketStatus('Not Connected');
       window.alert('WebSocket connection not successful');
- 
+
     };
 
     ws.onmessage = (event) => {
@@ -109,12 +117,12 @@ const Transcription = () => {
           return `<span style="color: ${color}">${wordData.word} </span>`;
         })
         .join('');
-      setTranscription((prev) => prev + newTranscription + '<br>');
+      setTranscription((prev) => prev + newTranscription + ' ');
     } else {
       setTranscription((prev) => prev + transcriptData.text + ' ');
     }
     setEditableTranscription((prev) => prev + transcriptData.text + ' ');
-    setSendOriginal((prev) => prev + transcriptData.text + '\n');
+    setSendOriginal((prev) => prev + transcriptData.text + ' ');
 
     if (transcriptData.language && transcriptData.language_probability) {
       setDetectedLanguage(
@@ -209,6 +217,30 @@ const Transcription = () => {
       }
     );
   };
+
+  const getWordErrorRate = () => {
+    console.log(editableTranscription, sendOriginal);
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      "asr_transcription": sendOriginal,
+      "kenlm_transcription": editableTranscription
+    });
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+     fetch(`${process.env.NEXT_PUBLIC_WER_API}`, requestOptions)
+       .then((response) => response.json())
+       .then((result) => setWordErrorRate((result["wer"] * 100).toString() + "%"))
+       .catch((error) => console.error(error));
+
+  }
 
   const stopRecording = () => {
     if (!isRecording) return;
@@ -374,7 +406,7 @@ const Transcription = () => {
     setComment('');
   };
 
- 
+
   const handleCommentChange = (event) => {
     setComment(event.target.value);
   };
@@ -403,7 +435,7 @@ const Transcription = () => {
       console.error('Error:', error);
     });
   };
- 
+
 
 
   return (
@@ -416,7 +448,8 @@ const Transcription = () => {
             <input
               type="text"
               id="websocketAddress-login"
-            defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
+           placeholder='WebSocket Address'
+           defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
               className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
             />
             <button onClick={() => initWebSocket('login')}>Connect</button>
@@ -446,7 +479,7 @@ const Transcription = () => {
                 <input
                   type="text"
                   ref={websocketAddressRef}
-                defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
+                  defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
                   className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
                 />
               </div>
@@ -536,15 +569,24 @@ const Transcription = () => {
               </div>
             )}
 
+            <label htmlFor="transcription">Transcription:</label>
             <div
+                id="transcription"
               className="transcription"
               dangerouslySetInnerHTML={{ __html: transcription }}></div>
+          <label htmlFor="editableTranscription">Editable Transcription:</label>
             <textarea
+              id= "editableTranscription"
               className="editableTranscription"
               value={editableTranscription}
-              onChange={(e) =>
-                setEditableTranscription(e.target.value)
+              onChange={(e) => {
+                    setEditableTranscription(e.target.value);
+                    getWordErrorRate();
+                }
               }></textarea>
+            <div>
+              Word Error Rate (WER): <span>{wordErrorRate}</span>
+            </div>
             <div>
               WebSocket: <span>{webSocketStatus}</span>
             </div>

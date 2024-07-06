@@ -2,7 +2,7 @@ import os
 import asyncio
 import json
 import time
-from src.transcription_utils import append_transcription
+from src.transcription_utils import append_transcription, process_kenlm_transcription
 from .buffering_strategy_interface import BufferingStrategyInterface
 
 
@@ -97,6 +97,7 @@ class SilenceAtEndOfChunk(BufferingStrategyInterface):
                         self.client.sampling_rate * self.client.samples_width)) - self.chunk_offset_seconds)
             if vad_results[-1]['end'] < last_segment_should_end_before:
                 transcription = await asr_pipeline.transcribe(self.client)
+                transcription['text'] = process_kenlm_transcription(transcription['text'])
                 if transcription['text'] != '':
                     end = time.time()
                     transcription['processing_time'] = end - start
