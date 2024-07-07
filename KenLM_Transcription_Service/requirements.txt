@@ -1,0 +1,6 @@
+quart
+aiohttp
+python-Levenshtein
+requests
+jiwer
+quart-cors
