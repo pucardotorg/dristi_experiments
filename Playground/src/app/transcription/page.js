@@ -1,12 +1,14 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './styles.css';
-import { Select, MenuItem, FormControl, InputLabel, Icon, Button,    Dialog,
+import { Select, MenuItem, FormControl, InputLabel, Icon, Button,  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextareaAutosize } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import debounce from 'lodash/debounce';
+
 
 const Transcription = () => {
   const [websocket, setWebsocket] = useState(null);
@@ -191,6 +193,7 @@ const Transcription = () => {
     reader.readAsArrayBuffer(file);
   };
 
+
   const createAudioPipeline = (arrayBuffer) => {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const newContext = new AudioContext();
@@ -218,7 +221,9 @@ const Transcription = () => {
     );
   };
 
-  const getWordErrorRate = () => {
+  
+
+ const getWordErrorRate = useCallback(() => {
     console.log(editableTranscription, sendOriginal);
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -235,12 +240,21 @@ const Transcription = () => {
       redirect: "follow"
     };
 
-     fetch(`${process.env.NEXT_PUBLIC_WER_API}`, requestOptions)
-       .then((response) => response.json())
-       .then((result) => setWordErrorRate((result["wer"] * 100).toString() + "%"))
-       .catch((error) => console.error(error));
+    fetch(`${process.env.NEXT_PUBLIC_WER_API}`, requestOptions)
+    .then((response) => response.json())
+    .then((result) => {
+      const wer = (result["wer"] * 100).toFixed(2); 
+      setWordErrorRate(`${wer}%`);
+    })
+    .catch((error) => console.error(error));
+  }, [editableTranscription, sendOriginal]);
 
-  }
+const debouncedGetWordErrorRate = useCallback(debounce(getWordErrorRate, 5000), [editableTranscription, sendOriginal]);
+
+ useEffect(() => {
+    debouncedGetWordErrorRate();
+  }, [editableTranscription, sendOriginal, debouncedGetWordErrorRate]);
+
 
   const stopRecording = () => {
     if (!isRecording) return;
@@ -485,6 +499,7 @@ const Transcription = () => {
               </div>
               <div className="controlGroup">
                   <FormControl fullWidth variant="outlined">
+                  
                     <InputLabel id="languageSelectLabel">Language</InputLabel>
                     <Select
                       labelId="languageSelectLabel"
@@ -501,14 +516,14 @@ const Transcription = () => {
                   </FormControl>
               </div>
                 <div className="controlGroup">
-                  <FormControl fullWidth variant="outlined">
+                  <FormControl fullWidth variant="outlined" margin="normal">
                     <InputLabel id="asrModelInput">Transcription Model</InputLabel>
                     <Select
                       labelId="asrModelInput"
                       id="asrModelSelect"
                       value={selectedAsrModel}
                       onChange={(e) => setSelectedAsrModel(e.target.value)}
-                      label="ASR Model"
+                      label="Transcription  Models"
                       IconComponent={ExpandMoreIcon}
                     >
                       <MenuItem value="faster_whisper">Faster-Whisper</MenuItem>
@@ -581,7 +596,7 @@ const Transcription = () => {
               value={editableTranscription}
               onChange={(e) => {
                     setEditableTranscription(e.target.value);
-                    getWordErrorRate();
+                    debouncedGetWordErrorRate();
                 }
               }></textarea>
             <div>
@@ -631,3 +646,4 @@ const Transcription = () => {
 };
 
 export default Transcription;
+
