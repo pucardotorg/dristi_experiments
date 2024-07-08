@@ -1,12 +1,14 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './styles.css';
-import { Select, MenuItem, FormControl, InputLabel, Icon, Button,    Dialog,
+import { Select, MenuItem, FormControl, InputLabel, Icon, Button,  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextareaAutosize } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import debounce from 'lodash/debounce';
+
 
 const Transcription = () => {
   const [websocket, setWebsocket] = useState(null);
@@ -21,8 +23,8 @@ const Transcription = () => {
   const [detectedLanguage, setDetectedLanguage] = useState('Undefined');
   const [processingTime, setProcessingTime] = useState('Undefined');
   const [wordErrorRate, setWordErrorRate] = useState('0%');
-  const [selectedLanguage, setSelectedLanguage] = useState('multilingual');
-  const [selectedAsrModel, setSelectedAsrModel] = useState('faster_whisper');
+  const [selectedLanguage, setSelectedLanguage] = useState('english');
+  const [selectedAsrModel, setSelectedAsrModel] = useState('bhashini');
   const [transcription, setTranscription] = useState('');
   const [editableTranscription, setEditableTranscription] = useState('');
   const [showLoginPanel, setShowLoginPanel] = useState(true);
@@ -52,10 +54,7 @@ const Transcription = () => {
   }, [sendOriginal, editableTranscription]);
 
   const initWebSocket = (offset = 'config') => {
-    const websocketAddress =
-      offset === 'config'
-        ? websocketAddressRef.current?.value
-        : document.getElementById('websocketAddress-login').value;
+  const websocketAddress = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 
     if (!websocketAddress) {
       console.log('WebSocket address is required.');
@@ -67,7 +66,7 @@ const Transcription = () => {
     ws.onopen = () => {
       console.log('WebSocket connection established');
       setWebSocketStatus('Connected');
-      window.alert('WebSocket connection successful');
+       
 
 
     };
@@ -75,7 +74,7 @@ const Transcription = () => {
     ws.onclose = (event) => {
       console.log('WebSocket connection closed', event);
       setWebSocketStatus('Not Connected');
-      window.alert('WebSocket connection not successful');
+      
 
     };
 
@@ -191,6 +190,7 @@ const Transcription = () => {
     reader.readAsArrayBuffer(file);
   };
 
+
   const createAudioPipeline = (arrayBuffer) => {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const newContext = new AudioContext();
@@ -218,7 +218,9 @@ const Transcription = () => {
     );
   };
 
-  const getWordErrorRate = () => {
+  
+
+ const getWordErrorRate = useCallback(() => {
     console.log(editableTranscription, sendOriginal);
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -235,12 +237,21 @@ const Transcription = () => {
       redirect: "follow"
     };
 
-     fetch(`${process.env.NEXT_PUBLIC_WER_API}`, requestOptions)
-       .then((response) => response.json())
-       .then((result) => setWordErrorRate((result["wer"] * 100).toString() + "%"))
-       .catch((error) => console.error(error));
+    fetch(`${process.env.NEXT_PUBLIC_WER_API}`, requestOptions)
+    .then((response) => response.json())
+    .then((result) => {
+      const wer = (result["wer"] * 100).toFixed(2); 
+      setWordErrorRate(`${wer}%`);
+    })
+    .catch((error) => console.error(error));
+  }, [editableTranscription, sendOriginal]);
 
-  }
+const debouncedGetWordErrorRate = useCallback(debounce(getWordErrorRate, 5000), [editableTranscription, sendOriginal]);
+
+ useEffect(() => {
+    debouncedGetWordErrorRate();
+  }, [editableTranscription, sendOriginal, debouncedGetWordErrorRate]);
+
 
   const stopRecording = () => {
     if (!isRecording) return;
@@ -439,34 +450,39 @@ const Transcription = () => {
 
 
   return (
-    <div className="container">
-      {showLoginPanel ? (
-        <div className="loginPanel">
-          <div className="formContainer">
-            <h1>Pucar Login</h1>
-            <label htmlFor="websocketAddress-login">WebSocket Address:</label>
-            <input
-              type="text"
-              id="websocketAddress-login"
-           placeholder='WebSocket Address'
-           defaultValue={process.env.NEXT_PUBLIC_WEBSOCKET_URL}
-              className={`inputBox ${webSocketStatus === 'Connected' ? 'success' : webSocketStatus === 'Not Connected' ? 'error' : ''}`}
-            />
-            <button onClick={() => initWebSocket('login')}>Connect</button>
-            <label htmlFor="roomId">Room Id:</label>
-            <input
-              type="text"
-              id="roomId"
-              ref={roomIdInputRef}
-              placeholder="Room Id"
-            />
-
-            <button onClick={joinRoom} disabled={webSocketStatus !== 'Connected'}>Join Room</button>
-            <button onClick={createRoom}disabled={webSocketStatus !== 'Connected'} >Create Room</button>
-
-          </div>
-        </div>
-      ) : (
+     <div className="container">
+  {showLoginPanel ? (
+    <div className="loginPanel">
+      <div className="formContainer">
+        <h1>Pucar Login</h1>
+        <label htmlFor="roomId">Room Id:</label>
+        <input
+          type="text"
+          id="roomId"
+          ref={roomIdInputRef}
+          placeholder="Room Id"
+        />
+        <button
+          onClick={() => {
+            initWebSocket('login');
+            joinRoom();
+          }}
+         
+        >
+          Join Room
+        </button>
+        <button
+          onClick={() => {
+            initWebSocket('login');
+            createRoom();
+          }}
+           
+        >
+          Create Room
+        </button>
+      </div>
+    </div>
+  ) : (
         <div className="recordingPanel">
           <div className="formContainer">
             <h1>Transcription POC</h1>
@@ -485,6 +501,7 @@ const Transcription = () => {
               </div>
               <div className="controlGroup">
                   <FormControl fullWidth variant="outlined">
+                  
                     <InputLabel id="languageSelectLabel">Language</InputLabel>
                     <Select
                       labelId="languageSelectLabel"
@@ -494,25 +511,25 @@ const Transcription = () => {
                       label="Language"
                       IconComponent={ExpandMoreIcon}
                     >
+                     <MenuItem value="english">English</MenuItem>
                       <MenuItem value="multilingual">Multilingual</MenuItem>
-                      <MenuItem value="english">English</MenuItem>
                       <MenuItem value="hindi">Hindi</MenuItem>
                     </Select>
                   </FormControl>
               </div>
                 <div className="controlGroup">
-                  <FormControl fullWidth variant="outlined">
+                  <FormControl fullWidth variant="outlined" margin="normal">
                     <InputLabel id="asrModelInput">Transcription Model</InputLabel>
                     <Select
                       labelId="asrModelInput"
                       id="asrModelSelect"
                       value={selectedAsrModel}
                       onChange={(e) => setSelectedAsrModel(e.target.value)}
-                      label="ASR Model"
+                      label="Transcription  Models"
                       IconComponent={ExpandMoreIcon}
                     >
+                       <MenuItem value="bhashini">Bhashini</MenuItem>
                       <MenuItem value="faster_whisper">Faster-Whisper</MenuItem>
-                      <MenuItem value="bhashini">Bhashini</MenuItem>
                       <MenuItem value="whisper">Whisper</MenuItem>
                     </Select>
                   </FormControl>
@@ -581,7 +598,7 @@ const Transcription = () => {
               value={editableTranscription}
               onChange={(e) => {
                     setEditableTranscription(e.target.value);
-                    getWordErrorRate();
+                    debouncedGetWordErrorRate();
                 }
               }></textarea>
             <div>
@@ -631,3 +648,4 @@ const Transcription = () => {
 };
 
 export default Transcription;
+
