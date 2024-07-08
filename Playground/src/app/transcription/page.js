@@ -8,6 +8,8 @@ import { Select, MenuItem, FormControl, InputLabel, Icon, Button,  Dialog,
   TextareaAutosize } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import debounce from 'lodash/debounce';
+import HomeIcon from '@mui/icons-material/Home';
+import Link from 'next/link';3
 
 
 const Transcription = () => {
@@ -453,8 +455,17 @@ const debouncedGetWordErrorRate = useCallback(debounce(getWordErrorRate, 5000), 
      <div className="container">
   {showLoginPanel ? (
     <div className="loginPanel">
+    <div className="loginContent"> 
+     <div className="headerContainer">
+    <Link href="/" passHref>
+      <HomeIcon fontSize="inherit" style={{ fontSize: '28px', marginLeft: '60px', marginRight: '10px', cursor: 'pointer' }} />
+    </Link>
+    <h1 style={{ fontSize: '28px', fontWeight: 'bold' }}>Pucar Content</h1>
+  </div>
+
+      
       <div className="formContainer">
-        <h1>Pucar Login</h1>
+      
         <label htmlFor="roomId">Room Id:</label>
         <input
           type="text"
@@ -482,10 +493,18 @@ const debouncedGetWordErrorRate = useCallback(debounce(getWordErrorRate, 5000), 
         </button>
       </div>
     </div>
+    </div>
   ) : (
         <div className="recordingPanel">
+        <div className="loginContent"> 
+   <div className="headerContainer">
+    <Link href="/" passHref>
+      <HomeIcon  className="homeIcon" fontSize="inherit" style={{ fontSize: '28px',  marginRight: '10px', cursor: 'pointer' }} />
+    </Link>
+    <h1 style={{ fontSize: '28px', fontWeight: 'bold' }}>Pucar Content</h1>
+  </div>
           <div className="formContainer">
-            <h1>Transcription POC</h1>
+           
             <h3>
               Room Id - <span>{roomId}</span>
             </h3>
@@ -641,6 +660,7 @@ const debouncedGetWordErrorRate = useCallback(debounce(getWordErrorRate, 5000), 
             </div>
           </div>
           </div>
+        </div>
         </div>
       )}
     </div>
