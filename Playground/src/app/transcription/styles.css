@@ -27,6 +27,21 @@
   width: 100%;
   max-width: 500px;  
 }
+.loginContent {
+  text-align: center;
+  
+}
+.headerContainer {
+  display: flex;
+  align-items: center;  
+}
+
+ 
+.headerContainer .homeIcon {
+  margin-left: 110px;
+}
+
+ 
 
 .formContainer h1 {
   font-size: 28px;  
@@ -208,5 +223,8 @@ button:disabled {
 
   .formContainer, .controls, .artifactDownloadPanel {
     max-width: 100%;
+  }
+   .headerContainer .homeIcon {
+    margin-left: 70px;
   }
 }

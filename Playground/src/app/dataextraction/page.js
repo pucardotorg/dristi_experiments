@@ -17,6 +17,8 @@ import {
   TextareaAutosize
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import HomeIcon from '@mui/icons-material/Home';
+import Link from 'next/link';
 
 import './styles.css'
 
@@ -148,7 +150,16 @@ export default function DataExtraction() {
 
   return (
     <div>
-      <Typography variant="h3" className="title">Data Extraction</Typography>
+     <Grid container alignItems="center" justifyContent="center" spacing={1}>
+  <Grid item>
+    <Link href="/" passHref>
+      <HomeIcon fontSize="inherit" style={{ fontSize: '60px', marginRight: '10px', cursor: 'pointer' }} />
+    </Link>
+  </Grid>
+  <Grid item>
+    <Typography variant="h3" className="title">Data Extraction</Typography>
+  </Grid>
+</Grid>
       <div className="form">
         <Grid container alignItems="center" spacing={2}>
           <Grid item>

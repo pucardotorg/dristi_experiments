@@ -19,6 +19,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import "./styles.css"
+import HomeIcon from '@mui/icons-material/Home';
+import Link from 'next/link';
 
 const options = [
   { label: 'Cheque Return Memo', value: ['cheque' , 'return' , 'memo'] },
@@ -100,6 +102,43 @@ export default function DataValidation() {
         });
     }
   };
+const handleSearchAgain = () => {
+    setLoading(true);
+
+    const valuesString = Array.isArray(inputValues) ? inputValues.join(',') : inputValues;
+    const valuesArray = valuesString ? valuesString.split(',').map(value => value.trim()) : [];
+
+    if (uploadedImage) {
+      const formData = new FormData();
+      formData.append('file', uploadedImage);
+      formData.append('word_check_list', JSON.stringify(valuesArray));  
+      formData.append('distance_cutoff', '1');
+      formData.append('doc_type', selectedOption);
+
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}`, {
+        method: 'POST',
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.text().then(text => { throw new Error(`Server error: ${response.status} - ${text}`); });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setJsonData(data);
+          setShowData(true);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Error submitting photo:', error);
+          setLoading(false);
+        });
+    }
+  };
+
+
+
 
   const handleGoBack = () => {
     setSelectedOption(options[0].value);
@@ -153,8 +192,21 @@ export default function DataValidation() {
   };
 
   return (
+    
     <div>
-      <Typography variant="h3" className="title">Data Validation</Typography>
+  <Grid container alignItems="center" justifyContent="center" spacing={1}>
+  <Grid item>
+    <Link href="/" passHref>
+      <HomeIcon fontSize="inherit" style={{ fontSize: '60px', marginRight: '10px', cursor: 'pointer' }} />
+    </Link>
+  </Grid>
+  <Grid item>
+    <Typography variant="h3" className="title">Data Validation</Typography>
+  </Grid>
+</Grid>
+
+        
+      
       <div className="form">
         <Grid container alignItems="center" spacing={2}>
           {/* Document Type */}
@@ -194,6 +246,17 @@ export default function DataValidation() {
             />
           </Grid>
         </Grid>
+         {showData && uploadedImage && !loading && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSearchAgain}
+            className="searchAgainButton"
+            sx={{ fontSize: '14px', padding: '12px', width: '100%', marginTop: '10px' }}
+          >
+            Search Again  
+          </Button>
+        )}
         <Box mt={2} />
         {isMobile && (
           <div className="fileInputLabelContainer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

@@ -12,7 +12,6 @@ body {
 
 .title {
   font-weight: bold;
-  margin-bottom: 16px;
   text-align: center;  
 }
 
@@ -25,6 +24,7 @@ body {
   border: 2px solid black;  
   padding: 20px;
   border-radius: 15px;
+  margin-left: 20px;
   width: 80vw;  
   height: 80vh;  
   max-width: 800px;  
