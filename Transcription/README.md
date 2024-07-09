@@ -248,18 +248,42 @@ function sendAudioConfig() {
   websocket.send(JSON.stringify(audioConfig));
 }
 ```
-
 ## Testing
 
-When implementing a new ASR, Vad or Buffering Strategy you can test it with:
+The testing suite includes:
 
-```bash
+1. **Audio Transcription Accuracy**:
+   - Tests are conducted on 3 audio files of actual judgments.
+   - Similarity scores to the original judgment documents:
+     - Audio 1: 98% similarity
+     - Audio 2: 89% similarity
+     - Audio 3: 94% similarity 
 
-ASR_TYPE=faster_whisper ASR_TYPE=faster_whisper  python3 -m unittest test.server.test_server
+2. **System Functionality**:
+   - WebSocket connection establishment
+   - Room creation
+   - Multi-client room joining
 
-```
+3. **Model Selection**:
+   - Ability to choose and test different transcription models
+   - When implementing a new ASR, VAD, or Buffering Strategy, you can test it with:
+     ```bash
+     ASR_TYPE=<asr_type> python3 -m unittest test.server.test_server
+     ```
+   - The current supported ASR types are:
+     ```bash
+     ASR_TYPE=faster_whisper python3 -m unittest test.server.test_server
+     ```
+     ```bash
+     ASR_TYPE=bhashini python3 -m unittest test.server.test_server
+     ```
 
-Please make sure that the end variables are in place for example for the VAD auth token. Several other tests are in place, for example for the standalone ASR.
+- Please make sure that the end variables are in place for example for the VAD auth token. Several other tests are in place, for example for the standalone ASR.
+
+- Audio file requirements for testing:
+     - Sample rate: 16 kHz
+     - Bitrate: 256 kbps
+     - Channel: Mono
 
 ## Areas for Improvement
 

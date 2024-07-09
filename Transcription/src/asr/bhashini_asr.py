@@ -188,7 +188,6 @@ class BhashiniASR(ASRInterface):
                 response = requests.request("POST", url, headers=headers, data=payload)
                 if response.status_code == 200:
                     transcribed_output = json.loads(response.text)['pipelineResponse'][0]['output'][0]['source']
-                    print("Bhashini Transcribed and Translated Audio : ", transcribed_output)
                     return transcribed_output
                 else:
                     print(f"Request failed with status code {response.status_code}. Retrying...")
@@ -277,7 +276,6 @@ class BhashiniASR(ASRInterface):
                 response = requests.request("POST", url, headers=headers, data=payload)
                 if response.status_code == 200:
                     transcribed_output = json.loads(response.text)['pipelineResponse'][1]['output'][0]['target']
-                    print("Bhashini Transcribed and Translated Audio : ", transcribed_output)
                     return transcribed_output
                 else:
                     print(f"Request failed with status code {response.status_code}. Retrying...")
