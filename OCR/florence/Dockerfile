@@ -1,5 +1,5 @@
 # Use the official PyTorch image as a base image
-FROM torch-transformer
+FROM pytorch/pytorch:latest
 
 # Set the working directory in the container
 WORKDIR /app
@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code to the working directory
 COPY . .
+
 
 # Expose port 8000 to the outside
 EXPOSE 8000
