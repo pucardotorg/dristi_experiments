@@ -1,3 +1,5 @@
+torch
+transformers
 quart
 quart-cors
 aiohttp
@@ -6,3 +8,6 @@ python-Levenshtein
 einops
 timm
 accelerate
+minio
+python-dotenv
+python-dateutil
