@@ -9,7 +9,7 @@ load_dotenv()
 
 ACCESS_KEY = os.environ.get('ACCESS_KEY')
 SECRET_KEY = os.environ.get('SECRET_KEY')
-BUCKET_NAME = os.environ.get('BUCKET_NAME')
+BUCKET_NAME = os.environ.get('TRANSCRIPTION_BUCKET_NAME')
 MINIO_HOST = os.environ.get('MINIO_HOST')
 
 
