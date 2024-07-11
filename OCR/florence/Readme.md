@@ -1,16 +1,3 @@
-# Docker
-### 1. Build the Docker Image
-
-```sh
-docker build -t flo-app .
-```
-
-
-### 2. Run the Docker Image
-
-```sh
-docker run --gpus all -p 1234:8000 flo-app
-```
 
 # Sample Curl Requests
 
