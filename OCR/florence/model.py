@@ -15,7 +15,11 @@ class Model:
     def __init__(self, context):
         self.context = context
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.db = Database.Database()
+        try:
+            self.db = Database.Database()
+        except Exception as e:
+            print(f"Error initializing database: {str(e)}")
+            self.db = None
         self.uid = None
         self.florence_model = None
         self.model_output = {}
@@ -145,7 +149,15 @@ class Model:
         self.model_output['OCR_average_confidence'] = average_confidence
         self.model_output['OCR output'] = cleaned_text
         if average_confidence < 0.65:
-            self.uid = self.db.upload_data(image_path, self.model_output)
+            try:
+                if self.db:
+                    self.uid = self.db.upload_data(image_path, self.model_output)
+                else:
+                    print("Database not initialized. Unable to upload data.")
+                    self.uid = None
+            except Exception as e:
+                print(f"Error uploading data to database: {str(e)}")
+                self.uid = None
             return {"Message": "Retry with a better quality image",
                     "UID": self.uid}
         print(f"Cleaned Text: {cleaned_text}")
@@ -159,7 +171,16 @@ class Model:
         self.model_output['Contains Keywords'] = contains_keywords
         self.model_output['Extracted Data'] = extracted_data
 
-        self.uid = self.db.upload_data(image_path, self.model_output)
+        try:
+            if self.db:
+                self.uid = self.db.upload_data(image_path, self.model_output)
+            else:
+                print("Database not initialized. Unable to upload data.")
+                self.uid = None
+        except Exception as e:
+            print(f"Error uploading data to database: {str(e)}")
+            self.uid = None
+        
         if extract_data and extracted_data:
             return {
                 "Contains Keywords": contains_keywords,
