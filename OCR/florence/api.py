@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 app = Quart(__name__)
-app = cors(app)
+app = cors(app, allow_origin="*")
 
 @app.before_serving
 async def startup():
