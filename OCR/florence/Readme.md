@@ -68,6 +68,35 @@ curl -X POST <url> \
 
   It supports only one doc type right now for data extraction - cheque_return_memo
 
+
+### JSON returned:
+
+
+#### Sample JSON returned:
+```
+{
+  "Contains Keywords": {
+    "memo": 0,
+    "return": 1,
+    "return memo": 0
+  },
+  "Extracted Data": {
+    "Cheque Amount": null,
+    "Date of Cheque Return": "2013-01-07",
+    "Date of Cheque Submission": null
+  },
+  "UID": "GUUEQK"
+}
+```
+
+```
+{
+  "Message": "Retry with a better quality image",
+  "UID": "XZCSAT"
+}
+```
+
+
 ### Flowchart: 
 
 <img width="251" alt="image" src="https://github.com/user-attachments/assets/9298dc57-75e4-493e-afb7-90ab6f6c7b19">
