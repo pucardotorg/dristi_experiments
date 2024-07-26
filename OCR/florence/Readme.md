@@ -47,7 +47,7 @@ Request Parameters:
 ### For Data Validation
 
 ```
-curl -X POST http://localhost:5000/ \
+curl -X POST <url> \
   -F 'file=@/path/to/your/image.jpg' \
   -F 'word_check_list=["keyword1", "keyword2"]' \
   -F 'distance_cutoff=1' \
@@ -58,7 +58,7 @@ curl -X POST http://localhost:5000/ \
 ### For Data Extraction 
 
 ```
-curl -X POST http://localhost:5000/ \
+curl -X POST <url> \
   -F 'file=@/path/to/your/image.jpg' \
   -F 'word_check_list=["keyword1", "keyword2"]' \
   -F 'distance_cutoff=2' \
