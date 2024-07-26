@@ -76,6 +76,7 @@ curl -X POST <url> \
 
 #### Key points : 
 There is a check on confidence overall of OCR .. it should be more than the decided cutoff
+
 The image extraction is hit only if extraction argument is passed . 
 
 
