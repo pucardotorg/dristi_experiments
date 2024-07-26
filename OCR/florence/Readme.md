@@ -73,3 +73,9 @@ curl -X POST <url> \
 <img width="287" alt="image" src="https://github.com/user-attachments/assets/899c74d2-11b9-4251-9b2b-487da2dc1a1a">
 
 
+
+#### Key points : 
+There is a check on confidence overall of OCR .. it should be more than the decided cutoff
+The image extraction is hit only if extraction argument is passed . 
+
+
