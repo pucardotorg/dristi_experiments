@@ -70,8 +70,7 @@ curl -X POST <url> \
 
 ### Flowchart: 
 
-<img width="287" alt="image" src="https://github.com/user-attachments/assets/899c74d2-11b9-4251-9b2b-487da2dc1a1a">
-
+<img width="251" alt="image" src="https://github.com/user-attachments/assets/9298dc57-75e4-493e-afb7-90ab6f6c7b19">
 
 
 #### Key points : 
