@@ -10,6 +10,7 @@ import Database
 import torch.nn.functional as F
 from dateutil.parser import parse as date_parse
 from dateutil.parser import ParserError
+from typing import Union
 
 class Model:
     def __init__(self, context):
@@ -24,7 +25,7 @@ class Model:
         self.florence_model = None
         self.model_output = {}
     
-    def fixed_get_imports(self, filename: str | os.PathLike) -> list[str]:
+    def fixed_get_imports(self, filename: Union[str, os.PathLike]) -> list[str]:
         if not str(filename).endswith("modeling_florence2.py"):
             return get_imports(filename)
         imports = get_imports(filename)
