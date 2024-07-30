@@ -11,3 +11,4 @@ accelerate
 minio
 python-dotenv
 python-dateutil
+huggingface-hub
