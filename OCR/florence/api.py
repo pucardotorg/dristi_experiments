@@ -25,7 +25,7 @@ async def startup():
         model = None
         logging.debug(f"Model not initialized: {e}")
 
-@app.route('/', methods=['POST'])
+@app.route('/OCR', methods=['POST'])
 async def embed():
     temp_dir = tempfile.mkdtemp()
     files = await request.files
