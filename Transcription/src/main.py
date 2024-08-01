@@ -12,7 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="VoiceStreamAI Server: Real-time audio transcription using self-hosted Whisper and WebSocket")
     parser.add_argument("--vad-type", type=str, default="pyannote", help="Type of VAD pipeline to use (e.g., 'pyannote')")
     parser.add_argument("--vad-args", type=str, default='{"auth_token": "huggingface_token"}', help="JSON string of additional arguments for VAD pipeline")
-    parser.add_argument("--asr-type", type=str, default="faster_whisper", help="Type of ASR pipeline to use (e.g., 'whisper')")
+    parser.add_argument("--asr-type", type=str, default="bhashini", help="Type of ASR pipeline to use (e.g., 'whisper')")
     parser.add_argument("--asr-args", type=str, default='{"model_size": "large-v3"}', help="JSON string of additional arguments for ASR pipeline")
     parser.add_argument("--host", type=str, default="127.0.0.1", help="Host for the WebSocket server")
     parser.add_argument("--port", type=int, default=8765, help="Port for the WebSocket server")
@@ -30,8 +30,8 @@ def main():
         return
 
     asr_pipeline_map = {
-        "faster_whisper": ASRFactory.create_asr_pipeline("faster_whisper", **asr_args),
-        "whisper": ASRFactory.create_asr_pipeline("whisper", **asr_args),
+        # "faster_whisper": ASRFactory.create_asr_pipeline("faster_whisper", **asr_args),
+        # "whisper": ASRFactory.create_asr_pipeline("whisper", **asr_args),
         "bhashini": ASRFactory.create_asr_pipeline("bhashini", **asr_args),
     }
 
