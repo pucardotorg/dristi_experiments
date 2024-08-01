@@ -33,7 +33,7 @@ async def startup():
     model = Model(app, model_paths, vocab_paths)
 
 
-@app.route('/', methods=['POST'])
+@app.route('/kenlm', methods=['POST'])
 async def embed():
     global model
     data = await request.get_json()
@@ -49,7 +49,7 @@ async def calculate_wer():
     result = await model.calculate_wer(req)
     return result
 
-@app.route('/', methods=['PUT'])
+@app.route('/kenlm', methods=['PUT'])
 async def update():
     global model
     data = await request.get_json()

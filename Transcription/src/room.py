@@ -40,7 +40,7 @@ class Room:
                            "chunk_length_seconds": 5,
                            "chunk_offset_seconds": 0.1
                        },
-                       "asr_model": "faster_whisper",
+                       "asr_model": "bhashini",
                        "asr_args": '{"model_size": "large-v3"}',
                        "vad_model": "pyannote",
                        "vad_args": '{"auth_token": "huggingface_token"}'
@@ -53,7 +53,7 @@ class Room:
                                                                                      self,
                                                                                      **self.config['processing_args'])
         self.vad_pipeline = vad_pipeline
-        self.asr_pipeline = asr_pipeline_map["faster_whisper"]
+        self.asr_pipeline = asr_pipeline_map["bhashini"]
         self.asr_pipeline_map = asr_pipeline_map
 
     def update_config(self, config_data):
