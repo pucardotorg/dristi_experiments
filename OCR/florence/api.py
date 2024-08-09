@@ -7,6 +7,9 @@ import os
 import tempfile
 import ast
 import logging
+from pdf2image import convert_from_path
+
+from utils import run_ocr, get_final_response
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -33,8 +36,11 @@ async def embed():
     if not uploaded_file:
         return {"error": "File is missing"}, 400
 
+    file_path,file_type = uploaded_file.filename.split('.')
+
     image_file = os.path.join(temp_dir, uploaded_file.filename)
     await uploaded_file.save(image_file)
+
 
     form = await request.form
     word_check_list = ast.literal_eval(form.get('word_check_list', '[]'))
@@ -48,14 +54,27 @@ async def embed():
         distance_cutoff=distance_cutoff,
         doc_type=doc_type,
         extract_data=extract_data
-    )
+        )
 
-    response = model.run_ocr(req.image_file, model.florence2_model, keywords=req.word_check_list, lev_distance_threshold=req.distance_cutoff, doc_type=req.doc_type, extract_data=req.extract_data)
 
+    responses = []
+    if file_type.startswith('pdf'):
+        images = convert_from_path(image_file);
+        
+        for i,image in enumerate(images):
+            image_path = file_path + "_"+ str(i) + ".jpg"
+            image.save(image_path)
+            response = run_ocr(image_path, req, model, temp_dir)
+            responses.append(response)
+        final_response = get_final_response(responses)
+    else:
+        final_response = run_ocr(image_file, req, model, temp_dir)
+        
+
+    
     os.remove(image_file)
     os.rmdir(temp_dir)
-
-    return jsonify(response)
+    return jsonify(final_response)
 
 if __name__ == "__main__":
     app.run()
