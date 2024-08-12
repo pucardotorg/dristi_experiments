@@ -12,3 +12,4 @@ minio
 python-dotenv
 python-dateutil
 huggingface-hub
+pdf2image
