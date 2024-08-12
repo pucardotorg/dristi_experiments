@@ -5,10 +5,9 @@ CONTAINS_KEYWORDS_KEY = "Contains Keywords"
 EXTRACTED_DATA_KEY = "Extracted Data"
 
 
-def add_words_counts(words_counts,response_words_counts):
-
-    for key,value in response_words_counts:
-        words_counts[key] += value
+def process_keywords_response(words_counts, response_words_counts):
+    for key, value in response_words_counts.items():
+        words_counts[key] = min(1, words_counts.get(key, 0) + value)
     return words_counts
 
 def get_final_response(responses):
@@ -22,7 +21,7 @@ def get_final_response(responses):
         if MESSAGE_KEY in response:
             message_count += 1
         if CONTAINS_KEYWORDS_KEY in response:
-            add_words_counts(contains_keywords, response[CONTAINS_KEYWORDS_KEY])
+            process_keywords_response(contains_keywords, response[CONTAINS_KEYWORDS_KEY])
         if EXTRACTED_DATA_KEY in response:
             extracted_data.update(response[EXTRACTED_DATA_KEY])
 

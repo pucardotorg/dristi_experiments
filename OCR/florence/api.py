@@ -59,7 +59,7 @@ async def embed():
 
     responses = []
     if file_type.startswith('pdf'):
-        images = convert_from_path(image_file);
+        images = convert_from_path(image_file)
         
         for i,image in enumerate(images):
             image_path = file_path + "_"+ str(i) + ".jpg"
