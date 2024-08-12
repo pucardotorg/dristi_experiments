@@ -1,20 +1,9 @@
-import os
-from request import ModelRequest
-from quart import request,jsonify
-import ast
-import re
-import json
 
 UID_KEY = "UID"
 MESSAGE_KEY = "Message"
 CONTAINS_KEYWORDS_KEY = "Contains Keywords"
 EXTRACTED_DATA_KEY = "Extracted Data"
 
-def run_ocr(image_file, req, model,temp_dir):   
-    
-    response = model.run_ocr(req.image_file, model.florence2_model, keywords=req.word_check_list, lev_distance_threshold=req.distance_cutoff, doc_type=req.doc_type, extract_data=req.extract_data)
-   
-    return response
 
 def add_words_counts(words_counts,response_words_counts):
 

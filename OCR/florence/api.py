@@ -9,7 +9,7 @@ import ast
 import logging
 from pdf2image import convert_from_path
 
-from utils import run_ocr, get_final_response
+from utils import get_final_response
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -64,11 +64,12 @@ async def embed():
         for i,image in enumerate(images):
             image_path = file_path + "_"+ str(i) + ".jpg"
             image.save(image_path)
-            response = run_ocr(image_path, req, model, temp_dir)
+            response = model.run_ocr(image_path, model.florence2_model, keywords=req.word_check_list, lev_distance_threshold=req.distance_cutoff, doc_type=req.doc_type, extract_data=req.extract_data)
             responses.append(response)
+            os.remove(image_path)
         final_response = get_final_response(responses)
     else:
-        final_response = run_ocr(image_file, req, model, temp_dir)
+        final_response = model.run_ocr(req.image_file, model.florence2_model, keywords=req.word_check_list, lev_distance_threshold=req.distance_cutoff, doc_type=req.doc_type, extract_data=req.extract_data)
         
 
     
